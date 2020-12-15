@@ -1,0 +1,34 @@
+{
+        "InputBlock": {
+                "Handler": "Kitti",
+                "Path": "data/kitti"
+        },
+        "InitBlock": {
+                "Handler": "PatchMatching",
+                "Params" : {
+                        "RANSACIt": 2000
+                }
+        },
+        "COBlock": {
+                "Handler": "P3PRANSAC",
+                "Params": {
+                        "newPointsTolerance": 1,
+                        "p3pRANSACIt": 2000,
+                        "p3pTolerance": 3,
+                        "newPointsRANSACIt": 1000
+                }
+        },
+        "OptBlock": {},
+        "OutputBlock": {},
+        "DetectorBlock": {
+                "Handler": "Harris",
+                "Params": {
+                        "patchSize": 11,
+                        "kappa": 0.08,
+                        "nKeypoints": 2000,
+                        "nonMaximaSuppressionRadius": 5,
+                        "descriptorRadius": 11,
+                        "lambda": 3
+                }
+        }
+}
