@@ -9,7 +9,7 @@ function plotCurrentImage (image, inliers, outliers)
         scatter(inliers(:, 1), inliers(:, 2), 15, 'g', 'filled');
     end
     if(~isempty(outliers))
-        scatter(outliers(:, 1), outliers(:, 2), 15, 'r', 'filled');
+        scatter(outliers(1, :), outliers(2, :), 15, 'r', 'filled');
     end
     hold off;
     title('Current Image');
