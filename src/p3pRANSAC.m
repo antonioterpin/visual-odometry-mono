@@ -24,11 +24,11 @@ function [R_C_W, t_C_W] = p3pRANSAC(keypoints, landmarks, K,...
 %p3pTolerance, specifying the tuning value for the reprojection error.
 
 maxInliers = 0;
-nData = 5;
+nData = 3;  %TODO Experiment with different values
 if(size(landmarks, 1) > 2)
     for i = 1 : p3pIterations
         [landmarkSample, idx] = datasample(landmarks, nData, 1, 'Replace', false);
-        keypointSample = keypoints(idx, :); %What about trying to sample more than 3 datapoints?
+        keypointSample = keypoints(idx, :);
         keypointNormHom = K \ [keypointSample, ones(nData, 1)]';
         for j = 1 : nData
             keypointNormHom(:, j) = keypointNormHom(:, j) / ...

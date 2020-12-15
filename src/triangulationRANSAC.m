@@ -1,5 +1,16 @@
 function [newState] = triangulationRANSAC (state, K, keypoints1,...
     keypoints, pose1, sample, tolerance, iterations)
+    %TRIANGULATIONRANSAC triangulates new 3D landmarks starting from two
+    %arrays of keypoints, one of the current image and the other of the
+    %previous one. The function uses the Eight Point and the RANSAC
+    %algorithms. The Eigth Point algorithm allows to extrapolate the
+    %Fundamental (or Essential) matrix given two sets of keypoints.
+    %However, the algorithm needs some filtering in order to distinguish
+    %between outliers and inliers and this is done using the RANSAC
+    %algorithm. It chooses datapoints from a given set - in this case the
+    %two homogeneous keypoints arrays - and through numerous iterations
+    %distinguishes the inliers from the outliers
+    
     %the function has to be put into a for cycle where the data to be
     %processed to get each new landmark are passed in
     
@@ -14,11 +25,8 @@ function [newState] = triangulationRANSAC (state, K, keypoints1,...
 if( size(keypoints1, 2) >= sample)
     p1 = [keypoints1; ones(1, size(keypoints1, 2))];
     p = [keypoints; ones(1, size(keypoints, 2))];
-    [T, ~, ~] = estimateRelativePose(p1, p, K, K);
     T1 = [pose1; 0,0,0,1];
     M1 = K * pose1;
-    P = triangulateFromPose( p1, p, T, K, K, T1);
-    F = [];
     [F, ~] = RANSAC(...
         @(data, otherParams) fundamentalEightPoint_normalized(data(1:3,:), data(4:6,:)), ...
         @(candidate, data, otherParams) errorMetric(data(1:3,:), data(4:6,:), candidate(:)),...
@@ -26,12 +34,8 @@ if( size(keypoints1, 2) >= sample)
         0.99, 8, [p; p1], []);
     if( isempty(F) )
         F = fundamentalEightPoint_normalized( p1, p );
-        %TODO Is epipolar line distance the metric we want?
-        d = epipolarLineDistance( F, p1, p );
-    else
-        %TODO Is epipolar line distance the metric we want?
-        d = epipolarLineDistance( F, p1, p );
     end
+    d = epipolarLineDistance( F, p1, p );   %TODO Is epipolar line distance the metric we want?
     inliers = find( d < tolerance );    %TODO Experiment changing tolerance for tuning # new landmarks added
     if( size(p1(:, inliers), 2) >= 8 )
         E = estimateEssentialMatrix(p1(:, inliers), p(:, inliers), K, K);

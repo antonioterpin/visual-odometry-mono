@@ -30,13 +30,13 @@ function [ pose, state, lastKeypoints, lastDescriptors, sizeHistory, keypointsOu
     descriptors1 = describeKeypoints( image1, keypoints1, descriptor_radius);
     
     %% Process current image
-    [keypoints, descriptors] = extractFeatures(image);
+    [keypoints, descriptors] = extractFeatures(image); %[U, V]
     
     %% Find matches in two images
-    [matches, keypoints1Matched, keypointsMatched] = getMatches(keypoints1, keypoints,...
+    [matches, keypoints1Matched, keypointsMatched] = getMatches(keypoints1, keypoints,... %[V,U], [U, V]
         descriptors1, descriptors);
     landmarksMatched = landmarks1(:, matches(matches > 0) );
-    keypointsMatched = keypointsMatched(1:2, :);
+    keypointsMatched = keypointsMatched(1:2, :);%[U, V]
     
     %% Find R and t with P3P + Ransac
     [R_IC, t_IC] = p3pRANSAC(keypointsMatched(1:2, :)', landmarksMatched', K,...

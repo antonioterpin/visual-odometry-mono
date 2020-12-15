@@ -1,10 +1,10 @@
 function [projections] = projectPoints (landmarks, K, D)
-    %PROJECTPOINTS Projects 3D landmarks on the image plane in pixel
+    %PROJECTPOINTS projects 3D landmarks on the image plane in pixel
     %coordinates given the intrisics parameters K and distorsion D
     %(optional parameter).
-    
-    %landmarks [3xN]
-    %K [3x3]
+    %The function exploits the projection equation using normalized coordinates.
+    %The function gets as inputs the [3 x N] landmarks matrix, arranged as
+    %[X, Y, Z].
     
     if nargin <= 2
         D = zeros(4, 1);
