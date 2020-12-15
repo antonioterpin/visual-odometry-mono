@@ -1,5 +1,16 @@
 function [newState] = triangulationRANSAC (state, K, keypoints1,...
     keypoints, pose1, sample, tolerance, iterations)
+%TRIANGULATIONRANSAC triangulates new 3D landmarks starting from two
+    %arrays of keypoints, one of the current image and the other of the
+    %previous one. The function uses the Eight Point and the RANSAC
+    %algorithms. The Eigth Point algorithm allows to extrapolate the
+    %Fundamental (or Essential) matrix given two sets of keypoints.
+    %However, the algorithm needs some filtering in order to distinguish
+    %between outliers and inliers and this is done using the RANSAC
+    %algorithm. It chooses datapoints from a given set - in this case the
+    %two homogeneous keypoints arrays - and through numerous iterations
+    %distinguishes the inliers from the outliers
+    
     %the function has to be put into a for cycle where the data to be
     %processed to get each new landmark are passed in
     
@@ -9,7 +20,6 @@ function [newState] = triangulationRANSAC (state, K, keypoints1,...
     %keypoints are the keypoints in the current step that have a match. [U,V], [2xN]
     
     %pose1 is the [3x4] matrix containing the last available pose [R|t]
-    
     
 if( size(keypoints1, 2) >= sample)
     p1 = [keypoints1; ones(1, size(keypoints1, 2))];
