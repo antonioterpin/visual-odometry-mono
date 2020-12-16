@@ -9,17 +9,34 @@ function [newState] = triangulationRANSAC (state, K, keypoints1,...
     %between outliers and inliers and this is done using the RANSAC
     %algorithm. It chooses datapoints from a given set - in this case the
     %two homogeneous keypoints arrays - and through numerous iterations
-    %distinguishes the inliers from the outliers
-    
-    %the function has to be put into a for cycle where the data to be
-    %processed to get each new landmark are passed in
-    
-    %keypoints1 are the keypoints used for triangulation at the previous step ,that
-    %have a match in the new one. [U,V], [2xN]
-    
-    %keypoints are the keypoints in the current step that have a match. [U,V], [2xN]
-    
-    %pose1 is the [3x4] matrix containing the last available pose [R|t]
+    %distinguishes the inliers from the outliers.
+    %The function selects the inliers that better fit the model and
+    %computes the most likely Fundamental (or Essential) matrix. Then, it
+    %extrapolates from it the rotation matrix R and the translation vector
+    %t. In this way it can linearly triangulate new landmarks. These
+    %landmarks are then put in the output variable newState together with
+    %the corresponding keypoints.
+    %
+    %Inputs:
+    %   state is an array [5 x N] where the first two rows are the keypoinys
+    %       [U,V] and the last three rows the landmarks [X,Y,Z].
+    %   K is the matrix of intrinsic parameters [3 x 3]
+    %   keypoints1 is the matrix of previous keypoints, to be triangulated.
+    %       [U, V], [2 x N]
+    %   keypoints is the matrix of current keypoints, to be triangulated.
+    %       [U, V], [2 x N]
+    %   pose1 is the array [R | t], [3 x 4] that combines the rotation
+    %       matrix together with the translation vector
+    %   sample is the minimum number of previous keypoints to start the
+    %       triangulation
+    %   tolerance is the maximum allowed distance of an inlier with respect
+    %       to the epipolar line
+    %   iterations is the number of RANSAC iterations
+    %
+    %Outputs:
+    %   newState is the matrix [5 x N] where the first two rows are the new
+    %       triangulated keypoints and the last three rows the new
+    %       triangulated landmarks.
     
 if( size(keypoints1, 2) >= sample)
     p1 = [keypoints1; ones(1, size(keypoints1, 2))];
