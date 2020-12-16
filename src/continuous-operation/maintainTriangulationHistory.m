@@ -1,6 +1,7 @@
 function [sizeHistory, lastKeypoints, lastDescriptors] =...
     maintainTriangulationHistory (sizeHistory, lastKeypoints, lastDescriptors,...
     keypoints, descriptors)
+    %MAINTAINTRIANGULATIONHISTORY
 
 if length(sizeHistory) >= 2
     % Accumulate data for triangulation
