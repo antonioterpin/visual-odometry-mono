@@ -22,6 +22,8 @@ function [R_C_W, t_C_W] = p3pRANSAC(keypoints, landmarks, K,...
 %The function takes also as input the matrix of intrinsic parameters K and
 %the values p3pIterations, specifying the number of RANSAC iterations, and
 %p3pTolerance, specifying the tuning value for the reprojection error.
+%
+% TODO
 
 maxInliers = 0;
 if(size(landmarks, 1) > 2)
@@ -57,18 +59,13 @@ if(size(landmarks, 1) > 2)
             t_C_W = rightt_IC;
         end
     end
-    if maxInliers == 0
-        disp('Impossible to create new Pose');
+end
 
-         R_C_W = [];
-         t_C_W = [];
-         return
-    end
-else
+if maxInliers == 0
     disp('Impossible to create new Pose');
 
      R_C_W = [];
      t_C_W = [];
-     return
 end
+
 end

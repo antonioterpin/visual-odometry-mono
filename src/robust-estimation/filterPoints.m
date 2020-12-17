@@ -8,6 +8,8 @@ function [validLandmarks, landmarks] = filterPoints(landmarks, R_CW, t_CW)
 % R_CW is 3x3, the rotation matrix from the world to the camera frame.
 % t_CW is 3x1, the translation vector from the world to the camera frame.
 
+% Should be R_WC, t_WC
+
 arguments
     landmarks {mustBeLandmarks(landmarks)}
     R_CW (3,3)

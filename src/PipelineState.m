@@ -5,14 +5,16 @@ classdef PipelineState
     %   Detailed explanation goes here
     
     properties (Access = private)
-        Poses = table() % Id | Pose (Nx12: T_WC(:).') % TODO twist vector
-        Landmarks = table() % Id | Position (Mx3: [X, Y, Z])
+        Poses = table([],[], 'VariableNames', {'Id', 'Pose'})
+        Landmarks = table([],[], 'VariableNames', {'Id', 'Position'})
         ObservationGraph = graph % Poses x Landmarks -> (keypoints, descriptors)
-        Candidates = table() % FrameId | Keypoints (Cx2: [u, v]) | Descriptors (CxM)
-        LastFrame = 0; % Index of last frame add
-        LastLandmark = 0; % Label of last landmark add
-        cos_th = 0.1; % Threshold for triangulation TODO make configurable
+        Candidates = table([],[],[],'VariableNames', ...
+            {'PoseId', 'Keypoints', 'Descriptors'})
+        LastFrame = 0 % Index of last frame add
+        LastLandmark = 0 % Label of last landmark add
+        cos_th = 0.1 % Threshold for triangulation TODO make configurable
         K % The intrinsics matrix
+        nLandmarksHistory = table([],[], 'VariableNames', {'PoseId', 'N'});
     end
     
     methods
@@ -22,7 +24,26 @@ classdef PipelineState
         
         function poses = getPoses(state)
             % TODO
+            
+%             R_IC = reshape(currPose(1:9), 3,3);
+%             t_IC = reshape(currPose(10:12), 3, 1);
+%             poses = [poseHistory, -R_IC.' * t_IC];
+            poses = [];
         end
+        
+        function nLandmarksHistory = getNLandmarksHistory(state, poseIndices)
+            % TODO document
+            if nargin < 2
+                poseIndices = (1:size(state.nLandmarksHistory,1)).';
+            end
+            nLandmarksHistory = state.nLandmarksHistory.N(poseIndices);
+        end
+        
+        function state = pruneHistory(state, minIndex)
+            % TODO document
+            state.nLandmarksHistory = state.nLandmarksHistory(...
+                state.nLandmarksHistory.PoseId >= minIndex, :);
+        end 
         
         function state = addPose(state, pose, landmarksIndices, keypoints, descriptors)
             % ADDPOSE Adds a new pose to the observation graph.
@@ -45,15 +66,15 @@ classdef PipelineState
             state.ObservationGraph = addnode(state.ObservationGraph, newPose);
             [n, ~, ~] = find(state.ObservationGraph.Nodes.PoseId == frameIndex);
             
-            state.Poses = [state.Poses; ...
-                table(frameIndex, reshape(pose,1,[]), ...
-                'VariableNames', {'Id', 'Pose'})];
+            state.Poses(end+1,:) = table(frameIndex, reshape(pose,1,[]));
             
             % add edges between pose and landmarks
+            nLandmarks = length(landmarksIndices);
             edgeTable = table(...
-                [repmat(n, length(landmarksIndices), 1) landmarksIndices], ...
+                [repmat(n, nLandmarks, 1) landmarksIndices], ...
                 keypoints, descriptors, ...
                 'VariableNames', {'EndNodes' 'Keypoints' 'Descriptors'});
+            state.nLandmarksHistory(end+1,:) = table(n, nLandmarks);
             state.ObservationGraph = addedge(...
                 state.ObservationGraph, edgeTable);
         end
@@ -78,9 +99,8 @@ classdef PipelineState
             landmarksLabels = (state.LastLandmark + 1 : state.LastLandmark + nLandmarks).';
             state.LastLandmark = state.LastLandmark + nLandmarks;
             
-            state.Landmarks = [state.Landmarks; ...
-                table(landmarksLabels, landmarks, ...
-                'VariableNames', {'Id', 'Position'})];
+            state.Landmarks(end+1:end+nLandmarks,:) ...
+                = table(landmarksLabels, landmarks);
             
             newLandmarks = table(Inf(nLandmarks, 1), landmarksLabels,...
                 'VariableNames', {'PoseId', 'LandmarkId'});
@@ -92,9 +112,9 @@ classdef PipelineState
         
         function [landmarks, landmarksLabels, descriptors] = getLandmarks(state, poseId)
             % GETLANDMARKS
-            %
+            % 
             % TODO COMMENT
-            %
+            % 
             % See also addLandmarks, addPose.
             
             poseNode = find(state.ObservationGraph.Nodes.PoseId == poseId);
@@ -112,9 +132,8 @@ classdef PipelineState
             % See also getCandidates, evaluateCandidates, pruneCandidates
             
             N = size(keypoints, 1);
-            state.Candidates = [state.Candidates; ...
-                table(repmat(frameIndex, N, 1), keypoints, descriptors, ...
-                'VariableNames', {'PoseId', 'Keypoints', 'Descriptors'})];
+            state.Candidates(end+1,:) = table(...
+                repmat(frameIndex, N, 1), keypoints, descriptors);
         end
         
         function [candidateLabels, keypoints, descriptors] = getCandidates(state, posesIndices)

@@ -16,7 +16,7 @@ function plotRecentTrajectory (poses, landmarks)
     plot(smooth(poses(1, :), 10), smooth(poses(3, :), 10),...
         '-x','MarkerSize', 2)
     hold on;
-    scatter(landmarks(:, 1), landmarks(:, 3), 4, 'k')
+    scatter(landmarks(1, :), landmarks(3, :), 4, 'k')
     set(gcf, 'GraphicsSmoothing', 'on');
     view(0,90);
     hold off;

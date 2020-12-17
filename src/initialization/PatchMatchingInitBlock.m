@@ -13,14 +13,8 @@ classdef PatchMatchingInitBlock < InitBlock
         end
     end
     
-%     methods (Access = protected)
-%         [keypoints, descriptors] = extractFeatures(obj, image)
-%         matchesIndices = getMatches(obj, descriptors1, descriptors2);
-%         errorMetric = getErrorMetric(obj); % RETURN [isInlier, error] = f(obj, F, p0, p1);
-%     end
-    
     methods (Access = protected)
-        function [keypoints,landmarks,descriptors,secondIndex] = ...
+        function [keypoints,landmarks,descriptors,T_2W,secondIndex] = ...
             run_(obj, input, K, fromIndex, stepIndex, nIt, T_1W)
             
             verboseDisp(obj.verbose, 'Bootstrapping...');
@@ -29,6 +23,8 @@ classdef PatchMatchingInitBlock < InitBlock
             [keypoints1, descriptors1] ...
                 = obj.Detector.extractFeatures(image1);
             
+            
+            % Search best frame to start looking at epipolar line distance
             R_1W = T_1W(1:3,1:3);
             t_1W = T_1W(1:3,4);
             maxInliersCount = -1;
@@ -51,7 +47,6 @@ classdef PatchMatchingInitBlock < InitBlock
                 
                 p1 = [p1_; ones(1,size(p1_,2))];
                 p2 = [p2_; ones(1,size(p2_,2))];
-                % all relevant elements on diagonal
                 F_candidate = estimateFundamentalMatrix(p1,p2,true);
                 inliercount = nnz(errorMetric(p1,p2,F_candidate(:)));
 
@@ -83,13 +78,16 @@ classdef PatchMatchingInitBlock < InitBlock
             p2 = p2(:,inliers);
             descriptors = descriptors(:,inliers);
             
-            T = estimateRelativePose(p1, p2, K, K);
-            landmarks = triangulateFromPose(p1, p2, T, K, K, T_1W);
+            % Estimate pose from inliers
+            T_21 = estimateRelativePose(p1, p2, K, K);
+            landmarks = triangulateFromPose(p1, p2, T_21, K, K, T_1W);
 
             [validLandmarks, landmarks] = filterPoints(landmarks, R_1W, t_1W);
 
             keypoints = p2(1:2,validLandmarks);
             descriptors = descriptors(:,validLandmarks);
+            landmarks = landmarks(1:3,:);
+            T_2W = T_21(1:3,:) * T_1W;
         end
     end
 end

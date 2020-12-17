@@ -7,8 +7,9 @@ classdef (Abstract) InitBlock
     end
     
     methods
-        function [keypoints,landmarks,descriptors,secondIndex] = ...
+        function [keypoints,landmarks,descriptors,T_2W,secondIndex] = ...
               run(obj, input, K, fromIndex, stepIndex, nIt, T_1W)
+        % TODO DOCUMENT
         arguments
           obj InitBlock
           input InputBlock
@@ -21,7 +22,7 @@ classdef (Abstract) InitBlock
         if size(T_1W,1) == 3
             T_1W = [T_1W; 0 0 0 1];
         end
-        [keypoints,landmarks,descriptors,secondIndex] = ...
+        [keypoints,landmarks,descriptors,T_2W,secondIndex] = ...
             obj.run_(input, K, fromIndex, stepIndex, nIt, T_1W);
         end
     end
@@ -31,7 +32,7 @@ classdef (Abstract) InitBlock
     end
     
     methods (Abstract, Access = protected)
-        [keypoints,landmarks,descriptors,secondIndex] = ...
+        [keypoints,landmarks,descriptors,T_2W,secondIndex] = ...
             run_(obj, input, K, fromIndex, stepIndex, nIt, T_1W)
     end
 end
