@@ -16,7 +16,7 @@ arguments
     lambda {mustBePositive(lambda)}
 end
 
-[dists,matches] = pdist2(descriptors1.', descriptors2.', 'euclidean', 'Smallest', 1);
+[dists,matches] = pdist2(double(descriptors1.'), double(descriptors2.'), 'euclidean', 'Smallest', 1);
 
 matches(dists >= lambda * min(dists(dists > 0))) = 0;
 

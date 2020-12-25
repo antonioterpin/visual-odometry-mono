@@ -25,7 +25,12 @@
                 }
         },
         "OptBlock": {},
-        "OutputBlock": {},
+        "OutputBlock": {
+                "plotGroundTruth": true,
+                "recentTrajectorySize": 20,
+                "landmarksHistorySize": 20,
+                "smooth": false
+        },
         "DetectorBlock": {
                 "Handler": "Harris",
                 "Params": {
@@ -41,6 +46,7 @@
             "verbose": true,
             "nSkip": 1,
             "startingFrame": 1,
+            "lastFrame": 350,
             "lostBelow": 20
         }
 }

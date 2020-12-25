@@ -24,7 +24,7 @@ classdef P3PRANSACCOBlock
     end
     
     methods 
-        function [obj, keypointsMatched, descriptorsMatched, landmarksMatched, R_CW, t_CW, lost_idx] ...
+        function [obj, keypointsMatched, descriptorsMatched, landmarksMatched, R_CW, t_CW, tracked_mask] ...
                 = localize(obj, trackedDescriptors, trackedLandmarks, image)
             
             verboseDisp(obj.verbose, 'p3p + RANSAC to localize');
@@ -45,20 +45,23 @@ classdef P3PRANSACCOBlock
                 obj.p3pTolerance, obj.minInliers, obj.verbose); 
             else
                 inliers = 0;
+                R_CW = []; 
+                t_CW = [];
             end
             
+            tracked_mask = zeros(size(trackedDescriptors, 2), 1);
             if nnz(inliers) == 0
                 keypointsMatched = [];
                 landmarksMatched = [];
                 descriptorsMatched = [];
-                lost_idx = ones(size(trackedDescriptors, 2), 1);
             else
                 keypointsMatched = keypointsMatched(:,inliers);
                 landmarksMatched = landmarksMatched(:,inliers);
                 descriptorsMatched = descriptorsMatched(:,inliers);
                 
-                lost_idx = trackedMatched_idx(inliers);
+                tracked_mask(trackedMatched_idx(inliers)) = 1;
             end
+            tracked_mask = tracked_mask > 0;
         end
     end
 end

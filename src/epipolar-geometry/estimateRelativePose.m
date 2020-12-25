@@ -24,7 +24,7 @@ E = estimateEssentialMatrix(p1, p2, K1, K2);
 [Rots,t] = decomposeEssentialMatrix(E);
 [R,t] = disambiguatePose(Rots,t,p1,p2,K1,K2);
 
-T = [R t; 0 0 0 1];
+T = [R, t; 0, 0, 0, 1];
 end
 
 function mustBeEqualSize(a,b)
