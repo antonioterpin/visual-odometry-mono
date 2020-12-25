@@ -18,7 +18,7 @@ end
 
 global verbose;
 
-validLandmarks = R_CW(3,1:3)*landmarks(1:3,:) > repmat(t_CW(3), [1 size(landmarks, 2)]);
+validLandmarks = R_CW(3,1:3)*landmarks(1:3,:) > repmat(-t_CW(3), [1 size(landmarks, 2)]);
 landmarks = landmarks(:,validLandmarks);
 
 verboseDisp(verbose, '%d out of %d valid landmarks', ...
