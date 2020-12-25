@@ -1,4 +1,5 @@
-function [isInlier, error] = errorMetric(p1, p2, otherParams)
+function [isInlier, error] = errorMetricReprojection(p1, p2, otherParams)
+% TODO update doc
 % ERRORMETRIC Find inlier points in p1 and p2 with respect to an error
 % metric (e.g., epipolar line distance).
 %
@@ -18,13 +19,11 @@ arguments
     otherParams
 end
 
-% global triangulationTolerance;
-assert(numel(otherParams) == 9, ...
-    'otherParams must have 9 elements to be reshaped into a 3x3 fundamental matrix');
-F = reshape(otherParams, 3, 3);
+% TODO arguments validation
+P = l
 
-error = epipolarLineDistance(F,p1,p2);
-isInlier = error < 1; %triangulationTolerance;
+error = reprojectionError(
+isInlier = error < 1;
 
 end
 
