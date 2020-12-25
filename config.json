@@ -6,7 +6,12 @@
         "InitBlock": {
                 "Handler": "PatchMatching",
                 "Params" : {
-                        "RANSACIt": 2000
+                        "RANSACIt": 2000,
+                        "verbose": true,
+                        "nIt": 2,
+                        "nSkip": 1,
+                        "adaptive": 0.99,
+                        "stopWithNPoints": 90
                 }
         },
         "COBlock": {
@@ -14,8 +19,9 @@
                 "Params": {
                         "newPointsTolerance": 1,
                         "p3pRANSACIt": 2000,
-                        "p3pTolerance": 3,
-                        "newPointsRANSACIt": 1000
+                        "p3pTolerance": 1,
+                        "newPointsRANSACIt": 2000,
+                        "minInliers": 10
                 }
         },
         "OptBlock": {},
@@ -30,5 +36,11 @@
                         "descriptorRadius": 11,
                         "lambda": 3
                 }
+        },
+        "Pipeline": {
+            "verbose": true,
+            "nSkip": 1,
+            "startingFrame": 1,
+            "lostBelow": 20
         }
 }

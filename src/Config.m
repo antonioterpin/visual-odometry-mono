@@ -3,12 +3,13 @@ classdef Config
     %   Set the experiment you want to test on the json file
     
     properties
-        InputHandler % InputBlock = KittiInputBlock('');
-        DetectorHandler % DetectorBlock = HarrisDetectorBlock({})
-        InitializationHandler % InitBlock = PatchMatchingInitBlock();
+        InputHandler
+        DetectorHandler
+        InitializationHandler
         ContinuousOperationHandler = []
         OptimizationHandler = []
         OutputHandler = []
+        PipelineParams = {};
     end
     
     methods (Static)
@@ -17,23 +18,12 @@ classdef Config
             obj = Config();
             
             configuration = Config.decodeJsonFile(filename);
-            assert(isfield(configuration, 'InputBlock'), ...
-                'Missing dataset information in the configuration file.');
-            assert(isfield(configuration, 'DetectorBlock'), ...
-                ['Missing detector block information ' ...
-                    'in the configuration file.']);
-            assert(isfield(configuration, 'InitBlock'), ...
-                ['Missing initialization block information ' ...
-                    'in the configuration file.']);
-            assert(isfield(configuration, 'COBlock'), ...
-                ['Missing continuous operation block information ' ...
-                    'in the configuration file.']);
-            assert(isfield(configuration, 'OptBlock'), ...
-                ['Missing optimization block information ' ...
-                    'in the configuration file.']);
-            assert(isfield(configuration, 'OutputBlock'), ...
-                ['Missing output block information ' ...
-                    'in the configuration file.']);
+            mandatoryFields = { 'InputBlock', 'DetectorBlock', ...
+                'InitBlock', 'COBlock', 'OptBlock', 'OutputBlock' };
+            missingFields = mandatoryFields(~isfield(configuration, mandatoryFields));
+            assert(isempty(missingFields), ...
+                sprintf('Missing %s information in the configuration file\n', ...
+                    strjoin(missingFields, ', ')));
                 
             obj.InputHandler ...
                 = Config.extractInputBlock(configuration.InputBlock);
@@ -42,11 +32,17 @@ classdef Config
             obj.InitializationHandler = Config.extractInitBlock(...
                 configuration.InitBlock, obj.DetectorHandler);
             obj.ContinuousOperationHandler ...
-                = Config.extractCOBlock(configuration.COBlock);
+                = Config.extractCOBlock(...
+                configuration.COBlock, obj.DetectorHandler, obj.InputHandler.getIntrinsics());
             obj.OptimizationHandler ...
                 = Config.extractOptBlock(configuration.OptBlock);
             obj.OutputHandler ...
                 = Config.extractOutputBlock(configuration.OutputBlock);
+            
+            % Pipeline specific config parameters
+            if isfield(configuration, 'Pipeline')
+                obj.PipelineParams = configuration.Pipeline;
+            end
         end 
         
         function inputBlock = extractInputBlock(datasetInfo)
@@ -85,14 +81,14 @@ classdef Config
                     initHandlerName);
 
                 initBlock = feval(initHandlerName);
-                if isfield(initBlockInfo, 'Params')
-                    initBlock.setParams(initBlockInfo.Params);
-                end
             catch exception
-                exception
                 error(['Error loading init block. ', ...
                     'Make sure the provided handler is S, ', ...
                     'where {S}InitBlock is a valid handler.']);
+            end
+            
+            if isfield(initBlockInfo, 'Params') && isprop(initBlock, 'configurableProps')
+                initBlock = Config.setParams(initBlock, initBlockInfo.Params);
             end
             
             initBlock.Detector = detectorHandler;
@@ -121,8 +117,30 @@ classdef Config
             end
         end
         
-        function coBlock = extractCOBlock(coBlockInfo)
-            coBlock = [];
+        function coBlock = extractCOBlock(coBlockInfo, detectorHandler, K)
+            assert(isfield(coBlockInfo, 'Handler'), ...
+                'The name of the handler is required.');
+            
+            try
+                coBlockName = coBlockInfo.Handler;
+                coHandlerName ....
+                    = sprintf('%sCOBlock', coBlockName);
+                fprintf('Handling dataset through class %s.\n', ...
+                    coHandlerName);
+
+                coBlock = feval(coHandlerName);
+            catch exception
+                error(['Error loading continuous operation block. ', ...
+                    'Make sure the provided handler is S, ', ...
+                    'where {S}COBlock is a valid handler.']);
+            end
+            
+            if isfield(coBlockInfo, 'Params') && isprop(coBlock, 'configurableProps')
+                coBlock = Config.setParams(coBlock, coBlockInfo.Params);
+            end
+            
+            coBlock.Detector = detectorHandler;
+            coBlock.K = K;
         end
         
         function optBlock = extractOptBlock(optBlockInfo)
@@ -141,6 +159,17 @@ classdef Config
             fid = fopen(filename);
             json = char(fread(fid).');
             obj = jsondecode(json);
+        end
+        
+        function obj = setParams(obj, params)
+            assert(isprop(obj, 'configurableProps'), ...
+                'obj must have a configurableProps field');
+            
+            configuredProps = obj.configurableProps(...
+                isfield(params, obj.configurableProps));
+            for prop = configuredProps
+                obj.(prop{:}) = params.(prop{:});
+            end
         end
     end
 end
