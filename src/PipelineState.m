@@ -12,16 +12,34 @@ classdef PipelineState
         cos_th = 0.1 % Threshold for triangulation TODO make configurable
 %         K % The intrinsics matrix
         lastLandmark = 0;
+        lostBelow = 20;
+        lost = true;
     end
     
     methods
 %         function obj = PipelineState(K)
 %             obj.K = K;
 %         end
+
+        function [state, lost] = isLost(state, lost)
+            if nargin > 1
+                state.lost = lost;
+            else
+                poseNode = find(state.ObservationGraph.Nodes.PoseId == state.Poses.Id(end));
+                state.lost = state.lost || degree(state.ObservationGraph, poseNode) < state.lostBelow;
+            end
+            
+            lost = state.lost;
+        end
         
-        function poses = getPoses(state)
+        function positions = getPositions(state)
             % TODO DOCUMENT
-            poses = state.Poses.Position;
+            positions = state.Poses.Position.';
+        end
+        
+        function [R_CW, t_CW] = getLastPose(state)
+            R_CW = reshape(state.Poses.R_CW(end,:), 3, 3);
+            t_CW = reshape(state.Poses.t_CW(end,:), 3, 1);
         end
         
         function state = resetToPose(state, poseIdx)
