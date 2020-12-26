@@ -31,6 +31,9 @@ for i = 1:N
     keypoints(:, i) = kp - r;
     temp_scores(kp(2)-r:kp(2)+r, kp(1)-r:kp(1)+r) = ...
         zeros(2*r + 1, 2*r + 1);
+    if nnz(temp_scores) < 10
+        break;
+    end
 end
 
 end

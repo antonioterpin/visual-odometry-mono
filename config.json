@@ -10,18 +10,19 @@
                         "verbose": true,
                         "nIt": 2,
                         "nSkip": 1,
-                        "adaptive": 0.99,
-                        "stopWithNPoints": 90
+                        "adaptive": 0.95,
+                        "stopWithNPoints": 90,
+                        "errorThreshold": 1,
+                        "maxDistance": 300
                 }
         },
         "COBlock": {
                 "Handler": "P3PRANSAC",
                 "Params": {
-                        "newPointsTolerance": 1,
                         "p3pRANSACIt": 2000,
                         "p3pTolerance": 1,
-                        "newPointsRANSACIt": 2000,
-                        "minInliers": 10
+                        "adaptive": 0.95,
+                        "minInliers": 5
                 }
         },
         "OptBlock": {},
@@ -45,8 +46,14 @@
         "Pipeline": {
             "verbose": true,
             "nSkip": 1,
-            "startingFrame": 90,
-            "lastFrame": 350,
-            "lostBelow": 20
+            "startingFrame": 1,
+            "lastFrame": 550,
+            "State": {
+                "lostBelow": 15,
+                "verbose": true,
+                "candidatesWindowSize": 2,
+                "cosineThreshold": 0.9
+            },
+            "continuouslyTriangulate": false
         }
 }
