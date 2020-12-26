@@ -11,6 +11,7 @@ classdef P3PRANSACCOBlock
         triangulationSample = 8
         newPointsRANSACIt = 2000
         minInliers = 30
+        adaptive = 0
         verbose = true
         
         % Data kept in memory between a localization and a triangulation
@@ -19,30 +20,37 @@ classdef P3PRANSACCOBlock
     
     properties (Constant)
         configurableProps = { 'newPointsTolerance', 'p3pRANSACIt', ...
-            'verbose', 'minInliers', ...
+            'verbose', 'minInliers', 'adaptive', ...
             'p3pTolerance', 'triangulationSample', 'newPointsRANSACIt'}
     end
     
     methods 
-        function [obj, keypointsMatched, descriptorsMatched, landmarksMatched, R_CW, t_CW, tracked_mask] ...
+        function [obj, keypointsMatched, descriptorsMatched, landmarksMatched, ...
+                R_CW, t_CW, tracked_mask, unmatchedKeypoints, unmatchedDescriptors] ...
                 = localize(obj, trackedDescriptors, trackedLandmarks, image)
             
             verboseDisp(obj.verbose, 'p3p + RANSAC to localize');
             
+%             obj.Detector.nKeypoints = 4000;
             [keypoints, descriptors] = obj.Detector.extractFeatures(image);
 
             matches = obj.Detector.getMatches(trackedDescriptors, descriptors);
-
+            unmatchedKeypoints = keypoints(:, matches == 0);
+            unmatchedDescriptors = descriptors(:, matches == 0);
+            
             [~, matched_idx, trackedMatched_idx] = find(matches);
-
+            
             landmarksMatched = trackedLandmarks(:, trackedMatched_idx);
             keypointsMatched = keypoints(1:2, matched_idx);
             descriptorsMatched = descriptors(:, matched_idx);
             
+            verboseDisp(obj.verbose, ...
+                'Found %d matches.\n', size(keypointsMatched, 2));
+            
             if size(keypointsMatched, 2) >= obj.minInliers
                [R_CW, t_CW, inliers] = p3pRANSAC(...
                 keypointsMatched, landmarksMatched, obj.K, obj.p3pRANSACIt, ...
-                obj.p3pTolerance, obj.minInliers, obj.verbose); 
+                obj.p3pTolerance, obj.minInliers, obj.adaptive, obj.verbose); 
             else
                 inliers = 0;
                 R_CW = []; 

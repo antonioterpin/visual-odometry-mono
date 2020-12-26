@@ -4,31 +4,31 @@ classdef PipelineState
     % 
     %   Detailed explanation goes here
     
-    properties (Access = private)
+    properties % (Access = private)
         Poses = table([],[],[],[], 'VariableNames', {'Id', 'R_CW', 't_CW', 'Position'})
         Landmarks = table([],[], 'VariableNames', {'Id', 'Position'})
-        ObservationGraph = graph % Poses x Landmarks -> (keypoints, descriptors)
-        Candidates = table([],[],'VariableNames', {'PoseId', 'Keypoints'})
-        cos_th = 0.1 % Threshold for triangulation TODO make configurable
+        ObservationGraph = graph % Poses x Landmarks -> (keypoints)
+        Candidates = table([],[],[],...
+            'VariableNames', {'PoseId', 'Keypoints', 'Descriptors'})
 %         K % The intrinsics matrix
         lastLandmark = 0;
         lost = true;
+        descriptorSize = 0;
     end
     
     % Config params
     properties (Constant)
-        configurableProps = {'lostBelow', 'verbose'}
+        configurableProps = {'lostBelow', 'verbose', ...
+            'cosineThreshold', 'candidatesWindowSize'}
     end
     properties
-        lostBelow = 20;
-        verbose = true;
+        lostBelow = 20
+        verbose = true
+        cosineThreshold = 0.1 % Threshold for triangulation 
+        candidatesWindowSize = 3
     end
     
     methods
-%         function obj = PipelineState(K)
-%             obj.K = K;
-%         end
-
         function [state, lost] = isLost(state, lost)
             if nargin > 1
                 state.lost = lost;
@@ -50,8 +50,21 @@ classdef PipelineState
             t_CW = reshape(state.Poses.t_CW(end,:), 3, 1);
         end
         
+        function [R_CW, t_CW] = getPose(state, poseIdx)
+            idx = find(state.Poses.Id == poseIdx);
+            
+            R_CW = reshape(state.Poses.R_CW(idx,:), 3, 3);
+            t_CW = reshape(state.Poses.t_CW(idx,:), 3, 1);
+        end
+        
+        function N = getNumberOfLandmarksTrackedAtFrame(state, frameIndex)
+            pose_nid = find(state.ObservationGraph.Nodes.PoseId == frameIndex);
+            N = degree(state.ObservationGraph, pose_nid);
+        end
+        
         function state = resetToPose(state, poseIdx)
-            [nidx, ~, ~] = find(state.ObservationGraph.Nodes.PoseId > poseIdx);
+            [nidx, ~, ~] = find(state.ObservationGraph.Nodes.PoseId > poseIdx ...
+                & ~isfinite(state.ObservationGraph.Nodes.LandmarkId));
             
             state.ObservationGraph = rmnode(state.ObservationGraph, nidx);
             
@@ -146,100 +159,174 @@ classdef PipelineState
             landmarks = state.Landmarks.Position(landmarksIdx, :).';
             keypoints = state.ObservationGraph.Edges.Keypoints(eid, :).';
         end
-%
-%         function state = addCandidates(state, frameIndex, keypoints, descriptors)
-%             % ADDCANDIDATES
-%             %
-%             % TODO COMMENT
-%             %
-%             % See also getCandidates, evaluateCandidates, pruneCandidates
-%             
-%             N = size(keypoints, 1);
-%             state.Candidates(end+1,:) = table(...
-%                 repmat(frameIndex, N, 1), keypoints, descriptors);
-%         end
-%
-%         function [candidateLabels, keypoints, descriptors] = getCandidates(state, posesIndices)
-%             % GETCANDIDATES Returns candidates that can be used to
-%             % triangulate new landmarks.
-%             %
-%             % [candidateLabels, keypoints, descriptors] = state.GETCANDIDATES()
-%             %
-%             % candidateLabels is Nx1, the labels of the candidates. These
-%             % are needed to define which ones have been matched.
-%             %
-%             % keypoints is Nx2, the set of keypoints relative to the
-%             % candidateLabels [u v].
-%             %
-%             % descriptors is NxM, the set of descriptors relative to the
-%             % keypoints.
-%             % 
-%             % state.GETCANDIDATES(posesIndices) additionally specify the
-%             % set of poses indices to consider when selecting the
-%             % candidates to evaluate.
-%             %
-%             % See also evaluateCandidates, addCandidates, pruneCandidates
-%             
-%             posesIndices = reshape(posesIndices, 1, []);
-%             [candidateLabels, ~, ~] = find(state.Candidates.PoseId == posesIndices);
-%             keypoints = state.Candidates.Keypoints(candidateLabels);
-%             descriptors = state.Candidates.Descriptors(candidateLabels);
-%         end
-%
-%         function state = evaluateCandidates(state, frameIndex, ...
-%                 matchLabels, keypoints, descriptors, landmarks)
-%             % EVALUATECANDIDATES Updates the observation graph and the
-%             % candidates database given the found matches.
-%             %
-%             % state = state.EVALUATECANDIDATES(frameIndex, matchLabels,
-%             % keypoints, descriptors, landmarks, K) Updates the observation 
-%             % graph and the candidates database given the found matches,
-%             % which are described by:
-%             %
-%             % frameIndex the index of the frame in which the candidates
-%             % have been matched again (e.g., the current frame).
-%             %
-%             % matchLabels (Nx1) the labels of the candidates (see getCandidates)
-%             % for which a match has been found.
-%             %
-%             % keypoints (Nx2, [u v]) and descriptors (NxM) are the 
-%             % descriptors of the matched candidates in the frameIndex-th 
-%             % image.
-%             % 
-%             % landmarks (Nx3, [X Y Z]) are the triangulated landmarks for
-%             % the matched candidates.
-%             
-%             % 1. Validation
-%             N = length(matchLabels);
-%             oldPoses = state.Candidates.PoseId(matchLabels);
-%             keypointsMatches = state.Candidates.Keypoints(matchLabels);
-%             bearings1 = normalize(state.K \ transpose([keypointsMatches, ones(N, 1)]), 'norm');
-%             bearings2 = normalize(state.K \ transpose([keypoints, ones(N, 1)]), 'norm');
-%             validMatches = reshape(abs(dot(bearings1, bearings2)) < state.cos_th, [], 1);
-%             oldPoses = oldPoses(validMatches);
-%             keypointsMatches = keypointsMatches(validMatches);
-%             descriptorsMatches = state.Candidates.Descriptors(matchLabels(validMatches));
-%             % 2. Save old landmark
-%             [state, landmarkLabels] = state.addLandmarks(...
-%                 oldPoses, landmarks, keypointsMatches, descriptorsMatches);
-%             % 3. Add observation
-%             state = state.addPose(frameIndex, landmarkLabels, keypoints, descriptors);
-%         end
-%
-%         function state = pruneCandidates(state, minPoseIndex)
-%             % PRUNE Prune the candidates table.
-%             % 
-%             % state = state.pruneCandidates(minPoseIndex) remove all 
-%             % candidates from poses associated to an index less or equal to
-%             % minPoseIndex.
-%             %
-%             % See also addCandidates, getCandidates, evaluateCandidates
-%             % 
-%             % TODO maxDistance based pruning
-%             
-%             % Candidates
-%             state.Candidates(state.Candidates.PoseId < minPoseIndex, :) = [];
-%         end
+
+        function state = addCandidates(state, ...
+                frameIndex, unmatchedKeypoints, unmatchedDescriptors)
+            % ADDCANDIDATES
+            %
+            % TODO COMMENT
+            %
+            % unmatchedKeypoints 2xN
+            % unmatchedDescriptors MxN, M assumed to be always the same
+            %
+            % See also getCandidates, evaluateCandidates, pruneCandidates
+            
+            % Keep a window of state.candidatesWindowSize
+            N = size(unmatchedKeypoints, 2);
+            
+            % Add candidates
+            state.Candidates = [state.Candidates; 
+                table(repmat(frameIndex, N, 1), ...
+                    unmatchedKeypoints.', unmatchedDescriptors.', ...
+                    'VariableNames', {'PoseId', 'Keypoints', 'Descriptors'})];
+            
+            verboseDisp(state.verbose, ...
+                'Add %d candidates.\n', N);
+        end
+
+        function [keypoints, descriptors] = getCandidates(state, frameIdx)
+            % GETCANDIDATES Returns candidates that can be used to
+            % triangulate new landmarks.
+            %
+            % TODO update documentation!
+            %
+            % [candidateLabels, keypoints, descriptors] = state.GETCANDIDATES()
+            %
+            % candidateLabels is Nx1, the labels of the candidates. These
+            % are needed to define which ones have been matched.
+            %
+            % keypoints is Nx2, the set of keypoints relative to the
+            % candidateLabels [u v].
+            %
+            % descriptors is NxM, the set of descriptors relative to the
+            % keypoints.
+            % 
+            % state.GETCANDIDATES(posesIndices) additionally specify the
+            % set of poses indices to consider when selecting the
+            % candidates to evaluate.
+            %
+            % See also evaluateCandidates, addCandidates, pruneCandidates
+            
+            [candidatePoseIdx, ~, ~] = find(state.Candidates.PoseId == frameIdx);
+            
+            keypoints = state.Candidates.Keypoints(candidatePoseIdx, :).';
+            descriptors = state.Candidates.Descriptors(candidatePoseIdx, :).';
+        end
+
+        function state = evaluateCandidates(state, K, ...
+                frameIndex, keypoints, ...
+                candidateFrameIdx, matchesMask)
+            % EVALUATECANDIDATES Updates the observation graph and the
+            % candidates database given the found matches.
+            %
+            % TODO update DOCUMENTAION!! 2xN 2xN
+            %
+            % state = state.EVALUATECANDIDATES(frameIndex, matchLabels,
+            % keypoints, descriptors, landmarks, K) Updates the observation 
+            % graph and the candidates database given the found matches,
+            % which are described by:
+            %
+            % frameIndex the index of the frame in which the candidates
+            % have been matched again (e.g., the current frame).
+            %
+            % matchLabels (Nx1) the labels of the candidates (see getCandidates)
+            % for which a match has been found.
+            %
+            % keypoints (Nx2, [u v]) and descriptors (NxM) are the 
+            % descriptors of the matched candidates in the frameIndex-th 
+            % image.
+            % 
+            % landmarks (Nx3, [X Y Z]) are the triangulated landmarks for
+            % the matched candidates.
+            
+            candidateIdx = find(state.Candidates.PoseId == candidateFrameIdx);
+            % extract from store
+            candidateKeypoints = state.Candidates.Keypoints(candidateIdx, :).';
+            % filter with mask
+            matchedKeypoints = candidateKeypoints(:, matchesMask);
+            N = size(matchedKeypoints, 2);
+            
+            % 1. Validation
+            bearings1 = normalize(K \ [matchedKeypoints; ones(1, N)], 'norm');
+            bearings2 = normalize(K \ [keypoints; ones(1, N)], 'norm');
+            
+            validMatches = reshape(...
+                ... % evaluation metric
+                abs(dot(bearings1, bearings2)) < state.cosineThreshold, ...
+                [], 1);
+            
+            N = nnz(validMatches);
+            if N == 0
+                verboseDisp(state.verbose, ...
+                    'Triangulated points have very low confidence.\n', []);
+                return; % All the triangulations are invalid.
+            end
+            
+            verboseDisp(state.verbose, ...
+                'Triangulated %d points with enough confidence.\n', N);
+            
+            % Filter matches based on validMatches
+            matchesMask(matchesMask > 0) = validMatches;
+
+            % 2. Triangulate landmark
+            [R_1W, t_1W] = state.getPose(candidateFrameIdx);
+            [R_2W, t_2W] = state.getPose(frameIndex);
+
+            T_1W = [R_1W, t_1W; 0, 0, 0, 1];
+            T_2W = [R_2W, t_2W; 0, 0, 0, 1];
+            T_21 = T_2W / T_1W;
+
+            landmarks = triangulateFromPose(...
+                [candidateKeypoints(1:2, matchesMask); ones(1, N)], ...
+                [keypoints(1:2, validMatches); ones(1, N)], ...
+                T_21, K, K, T_1W);
+
+            [state, ~, landmarksIdx, mask] = addLandmarks(state, landmarks(1:3, :));
+            % update matches mask
+            matchesMask(matchesMask > 0) = mask;
+            validMatches(validMatches > 0) = mask;
+
+            % 3. Add observation
+            state = state.addLandmarksToPose(candidateFrameIdx, ...
+                landmarksIdx, candidateKeypoints(:,matchesMask).');
+            state = state.addLandmarksToPose(frameIndex, ...
+                landmarksIdx, keypoints(1:2,validMatches).');
+
+            if state.verbose
+                N = state.getNumberOfLandmarksTrackedAtFrame(frameIndex);
+                verboseDisp(state.verbose, ...
+                    'Tracking %d landmarks at frame %d.\n', ...
+                    [N, frameIndex]);
+            end
+
+            % 4. Remove triangulated candidates
+            % We directly replace the old candidates with the remaining
+            % ones.
+            candidateDescriptors ...
+                = state.Candidates.Descriptors(candidateIdx, :).';
+            state.Candidates(candidateIdx, :) = []; % Remove everything
+
+            state = state.addCandidates(candidateFrameIdx, ...
+                candidateKeypoints(:, matchesMask), ...
+                candidateDescriptors(:, matchesMask));
+        end
+
+        function state = resetCandidates(state, minPoseIndex)
+            % PRUNE Prune the candidates table.
+            % 
+            % TODO update documentation
+            %
+            % state = state.pruneCandidates(minPoseIndex) remove all 
+            % candidates from poses associated to an index less or equal to
+            % minPoseIndex.
+            %
+            % See also addCandidates, getCandidates, evaluateCandidates
+            % 
+            % TODO maxDistance based pruning
+            
+            % Candidates
+            state.Candidates(state.Candidates.PoseId < minPoseIndex, :) = [];
+        end
 %
 %         function state = prune(state, minPoseIndex)
 %             % PRUNE Prune the observation graph.

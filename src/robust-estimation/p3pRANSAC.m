@@ -1,5 +1,5 @@
 function [R_CW, t_CW, inliers] = p3pRANSAC(keypoints, landmarks, K,...
-    p3pIterations, p3pTolerance, minInliers, verbose)
+    p3pIterations, p3pTolerance, minInliers, adaptive, verbose)
 % TODO fix documentation
 % keypoints 2xN [U, V]
 % landmarks 3xN
@@ -37,6 +37,7 @@ arguments
     p3pIterations = 1000
     p3pTolerance = 10
     minInliers = 30
+    adaptive = 0.95
     verbose = true
 end
 
@@ -51,7 +52,7 @@ otherParams = [K(:); p3pTolerance^2];
 
 % We use p3p + RANSAC to get the inliers
 [model, inliers] = RANSAC(@modelFromSample, @errorMetric, 3, data, ...
-    p3pIterations, otherParams, verbose, 0.95);
+    p3pIterations, otherParams, verbose, adaptive);
 
 model = model(:,:,inliers(1));
 inliers = inliers(2:end) > 0;
