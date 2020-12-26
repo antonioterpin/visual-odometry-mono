@@ -12,8 +12,16 @@ classdef PipelineState
         cos_th = 0.1 % Threshold for triangulation TODO make configurable
 %         K % The intrinsics matrix
         lastLandmark = 0;
-        lostBelow = 20;
         lost = true;
+    end
+    
+    % Config params
+    properties (Constant)
+        configurableProps = {'lostBelow', 'verbose'}
+    end
+    properties
+        lostBelow = 20;
+        verbose = true;
     end
     
     methods
@@ -87,7 +95,7 @@ classdef PipelineState
             
             % Add pose to pose table
             state.Poses(end+1,:) = table(poseIdx, ...
-                R_CW(:).', t_CW(:).', reshape(-R_CW * t_CW, 1, []));
+                R_CW(:).', t_CW(:).', reshape(-R_CW.' * t_CW, 1, []));
         end
         
         function [state, landmarks, landmarksIdx, mask] = addLandmarks(state, landmarks)

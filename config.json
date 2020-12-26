@@ -47,6 +47,9 @@
             "nSkip": 1,
             "startingFrame": 70,
             "lastFrame": 350,
-            "lostBelow": 20
+            "State": {
+                "lostBelow": 20,
+                "verbose": true
+            }
         }
 }
