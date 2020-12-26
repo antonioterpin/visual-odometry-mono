@@ -1,111 +1,169 @@
 classdef MonoVOPipeline
-    %MONOVOPIPELINE Summary of this class goes here
+%MONOVOPIPELINE Summary of this class goes here
+%   Detailed explanation goes here
+
+properties (Access = private)
+    inputBlock
+    initBlock
+    coBlock
+    optBlock
+    outBlock
+    % VO Pipeline params
+    verbose = true
+    nSkip = 1
+    startingFrame = 1
+    lastFrame = Inf
+    nFramesBeforePlot = 1
+    lostBelow = 20
+    pipelineState PipelineState = PipelineState();
+end
+
+properties (Access = private, Constant)
+    configurableProps = {'verbose', 'nSkip', ...
+        'startingFrame', 'lastFrame', ...
+        'nFramesBeforePlot', 'lostBelow'}
+end
+
+methods
+    
+function obj = MonoVOPipeline(configuration)
+    %MONOVOPIPELINE Construct an instance of this class
     %   Detailed explanation goes here
-    
-    properties (Access = private)
-        inputBlock
-        initBlock
-        coBlock
-        optBlock
-        outBlock
-    end
-    
-    methods
-        function obj = MonoVOPipeline(configuration)
-            %MONOVOPIPELINE Construct an instance of this class
-            %   Detailed explanation goes here
-            arguments
-                configuration Config
-            end
-            
-            obj.inputBlock = configuration.InputHandler;
-            obj.initBlock = configuration.InitializationHandler;
-            obj.coBlock = configuration.ContinuousOperationHandler;
-            obj.optBlock = configuration.OptimizationHandler;
-            obj.outBlock = configuration.OutputHandler;
-        end
-        
-        function run(obj)
-            K = obj.inputBlock.getIntrinsics();
-            inputHandler = obj.inputBlock;
-            
-            prevImage = inputHandler.getImage(1);
-            
-            fprintf('\n\nProcessing frame %d\n=====================\n', 1);
-[firstKeypoints,firstLandmarks,bestDescriptors,nStart] =...
-    obj.initBlock.run(inputHandler, K, 1, 2, 2, eye(3,4));
-prevState = [firstKeypoints;firstLandmarks(1:3,:)];
-%% Continuous operation
-I = eye(3);
-I = I(:);
-poseHistory = [0;0;0];
-landmarksHistory = [];
-currState = prevState;
-lastKeypoints = firstKeypoints;
-lastDescriptors = bestDescriptors;
-sizeHistory = size(firstKeypoints, 2);
-
-nSkip = 2;  %number of skipped frames every iteration
-% nStart = 5;
-for ii = nStart+1: nSkip :inputHandler.getNumberOfImages()
-    fprintf('\n\nProcessing frame %d\n=====================\n', ii);
-     currImage = inputHandler.getImage(ii);
-    
-    if ii == nStart + 1 
-        currPose = [I; 0;0;0];  %Initialize pose
-        prevPose = currPose;
-    elseif(~isempty(currPose))
-        prevPose = reshape(currPose, 3, 4);    %Maintain last pose in case we get lost
+    arguments
+        configuration Config
     end
 
-    %check to see if we're close and if so, re initialize
-    if(isempty(currPose) || size(currState, 2) < 8)
-        disp('Lost, will have to reinitialize from last pose')
+    obj.inputBlock = configuration.InputHandler;
+    obj.initBlock = configuration.InitializationHandler;
+    obj.coBlock = configuration.ContinuousOperationHandler;
+    obj.optBlock = configuration.OptimizationHandler;
+    obj.outBlock = configuration.OutputHandler;
 
-        [firstKeypoints, firstLandmarks, descriptors] = ...
-            obj.initBlock.run(inputHandler, K, ii-2, 2, 1, prevPose);
-        lastDescriptors = [lastDescriptors, descriptors];
-        lastKeypoints = [lastKeypoints, firstKeypoints];
-        currState = [firstKeypoints;firstLandmarks(1:3,:)];
-        currPose = prevPose(:); %TODO Change this with actual pose output from monoInitialization
-        
-        [sizeHistory, lastKeypoints, lastDescriptors] =...
-        maintainTriangulationHistory (sizeHistory, lastKeypoints, lastDescriptors,...
-        firstKeypoints, descriptors);
-        
+    configuredProps = obj.configurableProps(...
+        isfield(configuration.PipelineParams, obj.configurableProps));
+    for prop = configuredProps
+        obj.(prop{:}) = configuration.PipelineParams.(prop{:});
+    end
+
+end
+
+function run(obj, state)
+    arguments
+        obj MonoVOPipeline
+        state = [] % Optional, to resume pipeline run, with starting frame
+    end
+
+    inputHandler = obj.inputBlock;
+    K = obj.inputBlock.getIntrinsics();
+    
+    if isempty(state)
+        % Run from the beginning
+        obj.pipelineState = obj.pipelineState.addPose(...
+            obj.startingFrame, eye(3), zeros(3,1));
     else
-        [currPose, currState, lastKeypoints, lastDescriptors, sizeHistory, outliers] = ...
-        continuousOperations(currPose, prevImage, currImage, K, prevState, ...
-        lastKeypoints, lastDescriptors, sizeHistory);
-        if outliers == -1
-            outliers = [];
-        end
+        obj.pipelineState = state;
     end
-    if(~isempty(currPose))  %TODO controlla che questo non lasci indietro la traiettoria rispetto al current status
-        R_IC = reshape(currPose(1:9), 3,3);
-        t_IC = reshape(currPose(10:12), 3, 1);
-        poseHistory = [poseHistory, -R_IC.' * t_IC];
-        inliers = currState(1:2, :)';
-        %outliers = [];  %TODO add outliers
-        landmarks = currState(3:5, :)';
-            keypoints = currState(1:2, :)';
-            %outliers
-%            keypoints1
-%            matchesInliers
-        landmarksHistory = [landmarksHistory, size(landmarks, 1)];
-        if(ii > 6)
-            plotTogether(currImage, inliers, outliers, poseHistory, landmarks,...
-                landmarksHistory, nSkip, nStart)
-        end
-    end
-    
-    prevState = currState;
-    prevImage = currImage;
-    % Makes sure that plots refresh.    
-    pause(0.001);
-    
-end
-        end
-    end
-end
 
+    % Continuous operation
+    landmarksHistory = [];
+    positionHistory = zeros(3,1);
+
+    ii = obj.startingFrame + obj.nSkip;
+    while ii <= min(inputHandler.getNumberOfImages(), obj.lastFrame)
+        % If we are tracking to fre keypoints, we re-initialize
+        [~, isLost] = obj.pipelineState.isLost();
+        if isLost
+            verboseDisp(obj.verbose, ...
+                '\n\nInit from frame %d\n=====================\n', ii - obj.nSkip);
+
+            [R_CW, t_CW] = obj.pipelineState.getLastPose();
+            prevPose = [R_CW, t_CW];
+
+            [trackedKeypoints, trackedLandmarks, ~, pose, ii] = ...
+                obj.initBlock.run(inputHandler, K, ii-obj.nSkip, prevPose);
+
+            lostKeypoints = [];
+            if ~isempty(pose)
+                pose = reshape(pose(1:3,:), [], 1);
+                trackedLandmarks = trackedLandmarks(1:3,:);
+                
+                % TODO add observation also to previous frame
+                [obj.pipelineState, trackedLandmarks, landmarksIdx, mask] ...
+                    = obj.pipelineState.addLandmarks(trackedLandmarks);
+                trackedKeypoints = trackedKeypoints(:, mask);
+            else
+                poseHistory = poseHistory(:, 1:end - 1);
+                landmarksHistory = landmarksHistory(1:end-1);
+            end
+        else
+            verboseDisp(obj.verbose, ...
+                '\n\nProcessing frame %d\n=====================\n', ii);
+            
+            [landmarks, landmarksIdx, keypoints] ...
+                = obj.pipelineState.getObservations(ii - obj.nSkip);
+
+            prevImage = inputHandler.getImage(ii - obj.nSkip);
+            descriptors = obj.coBlock.Detector.describeKeypoints(prevImage, keypoints);
+
+            image = inputHandler.getImage(ii);
+
+            [obj.coBlock, trackedKeypoints, ~, trackedLandmarks, R_CW, t_CW, tracked_mask] ...
+                = obj.coBlock.localize(descriptors, landmarks, image);
+
+            if isempty(R_CW) || isempty(t_CW)
+                pose = [];
+            else
+                pose = [R_CW(:); t_CW(:)];
+                lostKeypoints = keypoints(:, ~tracked_mask);
+%                         [validLandmarks, ~] = filterPoints(trackedLandmarks, R_CW, t_CW);
+%                         trackedKeypoints = trackedKeypoints(:,validLandmarks);
+%                         trackedDescriptors = trackedDescriptors(:,validLandmarks);
+%                         trackedLandmarks = trackedLandmarks(:,validLandmarks); 
+                landmarksIdx = landmarksIdx(tracked_mask);
+            end
+        end
+
+        obj.pipelineState = obj.pipelineState.isLost(isempty(pose));
+        if ~isempty(pose)
+            R_CW = reshape(pose(1:9), 3, 3);
+            t_CW = reshape(pose(10:12), 3, 1);
+
+            % Evaluate reprojection error
+            points_C = R_CW * trackedLandmarks ...
+                + repmat(t_CW, [1, size(trackedLandmarks, 2)]);
+            repr = projectPoints(points_C, K);
+            repr_err = sum((trackedKeypoints - repr).^2, 'all');
+            N = size(trackedLandmarks, 2);
+            fprintf(strcat(...
+            '=====================\n', ...
+            'Reprojection error on tracked landmarks (%d)\n',...
+            '    Tot: %.3f\n', ...
+            '    Avg: %.3f\n',...
+            '=====================\n'), N, repr_err, repr_err / N);
+
+            
+            % Update state
+            obj.pipelineState = obj.pipelineState.addPose(ii, R_CW, t_CW);
+            obj.pipelineState = obj.pipelineState.addLandmarksToPose(...
+                ii, landmarksIdx, trackedKeypoints.');
+
+            % Plot
+            image = inputHandler.getImage(ii);
+            landmarksHistory = [landmarksHistory; N];
+%             positionHistory = obj.pipelineState.getPositions();
+            positionHistory = [positionHistory, -R_CW.' * t_CW];
+            
+            plotTogether(image, trackedKeypoints, lostKeypoints, ...
+                positionHistory, trackedLandmarks, landmarksHistory, ...
+                obj.nSkip, obj.startingFrame);
+        else
+            ii = ii - obj.nSkip; % this frame has to be repeated
+            obj.pipelineState = obj.pipelineState.resetToPose(ii);
+        end
+
+        ii = ii + obj.nSkip;
+        pause(0.01); % Makes sure that plots refresh.  
+    end
+end
+end
+end

@@ -1,5 +1,5 @@
 function [model, inliers] = RANSAC(modelFromSample, errorMetric, ...
-    nParams, data, nIterations, otherParams, verbose)
+    nParams, data, nIterations, otherParams, verbose, confidence)
 % RANSAC Generic RANSAC implementation.
 % 
 % [model, inliers] = RANSAC(modelFromSample, errorMetric, nParams, data)
@@ -57,11 +57,17 @@ arguments
     nIterations (1,1) = 1000
     otherParams = []
     verbose logical = false
+    confidence = 0.95
 end
 
 verboseDisp(verbose, 'Starting RANSAC..');
 
 maxNumberOfInliers = -1;
+
+if confidence > 0
+    assert(confidence < 1, 'confidence must be between 0 and 1.');
+    nIterations = Inf;
+end
 
 it = 1;
 while it <= nIterations
@@ -75,16 +81,27 @@ while it <= nIterations
         model = candidate;
         maxNumberOfInliers = nInliers;
         inliers = inliers_;
+        if confidence > 0
+            % outlier ratio estimate
+            outlierRatio = min(0.9, 1 - maxNumberOfInliers / numel(inliers));
+            nIterations = log(1-confidence) / log(1-(1-outlierRatio)^nParams);
+            % cap the number of iterations at 15000
+            nIterations = min(15000, nIterations);
+    %         verboseDisp(verbose, ...
+    %             '   estimated outlierRatio %.3f, %d it.\n', ...
+    %             [outlierRatio * 100, nIterations]);
+        end
     end
 
-    verboseDisp(verbose, [getProgressString(it, nIterations) ...
-        'Iteration %d) Found %d inliers, max is %d.\n'], ...
-        [it, nInliers, maxNumberOfInliers]);
+%     verboseDisp(verbose, [getProgressString(it, nIterations) ...
+%         'Iteration %d) Found %d inliers, max is %d.\n'], ...
+%         [it, nInliers, maxNumberOfInliers]);
     it = it + 1;
 end
 
 verboseDisp(verbose, ...
-    'RANSAC ended with %d inliers.\n', maxNumberOfInliers);
+    'RANSAC ended with %d inliers after %d iterations.\n', ...
+    [maxNumberOfInliers, it - 1]);
 end
 
 function mustContainEnoughData(data,nParams)

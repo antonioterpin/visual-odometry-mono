@@ -14,8 +14,7 @@ classdef ParkingInputBlock < InputBlock
         
         function obj = init(obj)
             obj.K = obj.loadIntrinsics();
-            obj.ImageNameFormat = ...
-                sprintf('%s/images/img_%05d.png', obj.Path);
+            obj.ImageNameFormat = strcat(obj.Path, '/images/img_%05d.png');
             obj.NumberOfImages = 598;
         end
     end

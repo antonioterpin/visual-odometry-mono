@@ -1,4 +1,4 @@
-function [newState] = triangulationRANSAC (state, K, keypoints1,...
+function [keypoints, landmarks, inliers] = triangulationRANSAC (K, keypoints1,...
     keypoints, pose1, sample, tolerance, iterations)
 %TRIANGULATIONRANSAC triangulates new 3D landmarks starting from two
     %arrays of keypoints, one of the current image and the other of the
@@ -37,8 +37,12 @@ function [newState] = triangulationRANSAC (state, K, keypoints1,...
     %   newState is the matrix [5 x N] where the first two rows are the new
     %       triangulated keypoints and the last three rows the new
     %       triangulated landmarks.
+    % TODO:
+    % - Returns also inliers
+    % - Add argument validation?
     
-if( size(keypoints1, 2) >= sample)
+    assert(size(keypoints1, 2) >= sample, 'TODO ADD ARGUMENTS VALIDATION.');
+    
     p1 = [keypoints1; ones(1, size(keypoints1, 2))];
     p = [keypoints; ones(1, size(keypoints, 2))];
     [T, ~, ~] = estimateRelativePose(p1, p, K, K);
@@ -71,23 +75,9 @@ if( size(keypoints1, 2) >= sample)
     T = [R_IC, t_IC; 0,0,0,1];
     M = T * T1;
     M = K * M(1:3, 1:4);
-    P = linearTriangulation(p1(:, inliers), p(:, inliers), M1, M);
+    landmarks = linearTriangulation(p1(:, inliers), p(:, inliers), M1, M);
     keypoints = keypoints(:, inliers);
-    
-    disp([num2str(size(P, 2)) ' newly triangulated points']);
 
-    % Return appropriate output w.r.t. situation (robustness)
-    if (isempty(keypoints) && ~isempty(state))
-        newState = state;
-    elseif (isempty(keypoints) && isempty(state))
-        newState = [];
-    else
-        newState = [state,...
-            [keypoints; P(1:3, :)]];
-        disp('NEW STATE ADDED WITH SUCCESS!!')
-    end
-else
-    newState = state;   %if not possible to run triangulation, skip
-end
+    disp([num2str(size(landmarks, 2)) ' newly triangulated points']);
 
 end

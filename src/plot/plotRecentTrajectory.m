@@ -13,11 +13,10 @@ function plotRecentTrajectory (poses, landmarks)
     minPosesY = min(poses(3, :));
     maxPosesY = max(poses(3, :)); 
     
-    plot(smooth(poses(1, :), 10), smooth(poses(3, :), 10),...
-        '-x','MarkerSize', 2)
+    plot(poses(1, :), poses(3, :), '-x','MarkerSize', 2) % smooth later eventually
     hold on;
-    scatter(landmarks(:, 1), landmarks(:, 3), 4, 'k')
-    set(gcf, 'GraphicsSmoothing', 'on');
+    scatter(landmarks(1, :), landmarks(3, :), 4, 'k')
+%     set(gcf, 'GraphicsSmoothing', 'on');
     view(0,90);
     hold off;
     axis([minPosesX-15, maxPosesX+15, minPosesY-10, maxPosesY+20])

@@ -41,10 +41,9 @@ Q = [p1(:,1) .* p2(:,1), ...
 F = reshape(V(:, end), 3, 3).';
 
 % Enforcing constraints on the decomposition of F
-[U,S,V] = svd(F);
-% S(1:2,1:2) = eye(2);
-S(3,3) = 0;
-F = U * S * V.';
+[U,~,V] = svd(F);
+% S(3,3) = 0;
+F = U * diag([1,1,0]) * V.';
 
 if normalizePoints
     % Undo the normalization

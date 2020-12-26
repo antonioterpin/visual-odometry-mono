@@ -4,8 +4,6 @@ clc;
 path(pathdef); % Reset paths
 addpath(genpath('src')); % Source code
 
-warning off % TODO PROPERLY SOLVE THESE
-
 %% Configuration & pipeline blocks loading
 % Change the following line to load a different configuration.
 % Alternatively, you can specify each block in the configuration object.
