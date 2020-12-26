@@ -49,7 +49,7 @@ classdef MalagaInputBlock < InputBlock
             translation = [-tmpPose(9);
                 -tmpPose(11);
                 -tmpPose(10)];
-            pose = NaN;
+            pose = translation;
             rotation = NaN;
         end
         

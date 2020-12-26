@@ -26,7 +26,7 @@
         },
         "OptBlock": {},
         "OutputBlock": {
-                "plotGroundTruth": true,
+                "superimposeGT": false,
                 "recentTrajectorySize": 20,
                 "landmarksHistorySize": 20,
                 "smooth": false
@@ -45,7 +45,7 @@
         "Pipeline": {
             "verbose": true,
             "nSkip": 1,
-            "startingFrame": 70,
+            "startingFrame": 90,
             "lastFrame": 350,
             "lostBelow": 20
         }

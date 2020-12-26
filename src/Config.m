@@ -37,7 +37,7 @@ classdef Config
             obj.OptimizationHandler ...
                 = Config.extractOptBlock(configuration.OptBlock);
             obj.OutputHandler ...
-                = Config.extractOutputBlock(configuration.OutputBlock);
+                = Config.extractOutputBlock(configuration.OutputBlock, obj.InputHandler);
             
             % Pipeline specific config parameters
             if isfield(configuration, 'Pipeline')
@@ -147,8 +147,10 @@ classdef Config
             optBlock = [];
         end
         
-        function outBlock = extractOutputBlock(optBlockInfo)
-            outBlock = [];
+        function outBlock = extractOutputBlock(outBlockInfo, inputHandler)
+            outBlock = Output;
+            outBlock = Config.setParams(outBlock, outBlockInfo);
+            outBlock.inputHandler = inputHandler;
         end
     end
     
