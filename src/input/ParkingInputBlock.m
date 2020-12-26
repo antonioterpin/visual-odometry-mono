@@ -30,5 +30,21 @@ classdef ParkingInputBlock < InputBlock
             % we select the first row
             K = load(sprintf('%s/K.txt', obj.Path));
         end
+        
+        function [pose, rotation, translation] = getTruePose_(obj, poseIndex)
+            fid = fopen(sprintf('%s/poses.txt', obj.Path));
+            for i = 1:poseIndex
+                line = fgetl(fid);
+            end
+            tmpPose = sscanf(line, '%f');
+            translation = [tmpPose(4);
+                tmpPose(8);
+                tmpPose(12)];
+            rotation = [tmpPose(1:3)';
+                tmpPose(5:7)';
+                tmpPose(9:11)'];
+            pose = translation;
+        end
+
     end
 end

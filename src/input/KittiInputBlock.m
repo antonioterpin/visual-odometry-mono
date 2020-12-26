@@ -36,6 +36,21 @@ classdef KittiInputBlock < InputBlock
             K = reshape(K([1:3 5:7 9:11]), 3, 3).';
             fclose(fid);
         end
+        
+        function [pose, rotation, translation] = getTruePose_(obj, poseIndex)
+            fid = fopen(sprintf('%s/poses/00.txt', obj.Path));
+            for i = 1:poseIndex
+                line = fgetl(fid);
+            end
+            tmpPose = sscanf(line, '%f');
+            translation = [tmpPose(4);
+                tmpPose(8);
+                tmpPose(12)];
+            rotation = [tmpPose(1:3)';
+                tmpPose(5:7)';
+                tmpPose(9:11)'];
+            pose = translation;
+        end
     end
 end
 

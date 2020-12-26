@@ -39,6 +39,14 @@ classdef (Abstract) InputBlock
             image = getImage_(obj, imageIndex);
         end
         
+        function [pose, rotation, translation] = getTruePose(obj, poseIndex)
+            if poseIndex > obj.NumberOfImages
+                InputBlock.imageIndexOutOfBounds(...
+                    poseIndex, obj.NumberOfImages);
+            end
+            [pose, rotation, translation] = getTruePose_(obj, poseIndex);
+        end
+        
         function NumberOfImages = getNumberOfImages(obj)
             % GETNUMBEROFIMAGES Get number of images in the dataset.
             %
@@ -58,6 +66,8 @@ classdef (Abstract) InputBlock
         image = getImage_(obj, imageIndex);
         % Method to overload to load intrinsics from dataset
         K = loadIntrinsics(obj);
+        % Method to overload to extract pose from ground truth
+        [pose, rotation, translation] = getTruePose_(obj, imageIndex);
     end
     
     methods (Access = protected, Static = true)
