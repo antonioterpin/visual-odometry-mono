@@ -66,6 +66,7 @@ function run(obj, state)
 
     % Continuous operation
     landmarksHistory = [];
+    positionHistory = zeros(3,1);
 
     ii = obj.startingFrame + obj.nSkip;
     while ii <= min(inputHandler.getNumberOfImages(), obj.lastFrame)
@@ -149,7 +150,8 @@ function run(obj, state)
             % Plot
             image = inputHandler.getImage(ii);
             landmarksHistory = [landmarksHistory; N];
-            positionHistory = obj.pipelineState.getPositions();
+%             positionHistory = obj.pipelineState.getPositions();
+            positionHistory = [positionHistory, -R_CW.' * t_CW];
             
             plotTogether(image, trackedKeypoints, lostKeypoints, ...
                 positionHistory, trackedLandmarks, landmarksHistory, ...
