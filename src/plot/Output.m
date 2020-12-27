@@ -88,18 +88,16 @@ classdef Output < handle
             %PLOTLANDMARKSHISTORY Plots the number of the landmarks over the past
             %iterations
 
-            %nSkip is the number of skipped frames in the main iteration.
-            % For instance, for 1 : 2 : lastImageIndex, nSkip = 2.
             if length(landmarksHistory) < obj.landmarksHistorySizePlot
                 plot(obj.frameIdx, landmarksHistory, '-k')
             else
-                plot(obj.frameIdx(end-obj.landmarksHistorySizePlot-1 : end),...
-                    landmarksHistory(end-19 : end), '-k')
+                plot(obj.frameIdx(end-obj.landmarksHistorySizePlot+1 : end),...
+                    landmarksHistory(end-obj.landmarksHistorySizePlot+1 : end), '-k')
             end
             title('Landmarks History')
         end
         
-        function plotFullTrajectory (obj, poses, imageIdx, ax4)
+        function plotFullTrajectory (obj, poses, imageIdx)
             %PLOTFULLTRAJECTORY
             %Get extreme values
             minPosesX = min(poses(1, :));
@@ -108,39 +106,38 @@ classdef Output < handle
             maxPosesY = max(poses(3, :));
             if obj.superimposeGT
                 
-                [poses, ~, ~] = obj.inputHandler.getTruePose(imageIdx);
-                obj.groundTruth = [obj.groundTruth, poses];
+                [posesGT, ~, ~] = obj.inputHandler.getTruePose(imageIdx);
+                obj.groundTruth = [obj.groundTruth, posesGT];
 
-                if poses(1) < obj.gtHistory(1)
-                    obj.gtHistory(1) = poses(1);
+                if posesGT(1) < obj.gtHistory(1)
+                    obj.gtHistory(1) = posesGT(1);
                 end
-                if poses(1) > obj.gtHistory(2)
-                    obj.gtHistory(2) = poses(1);
+                if posesGT(1) > obj.gtHistory(2)
+                    obj.gtHistory(2) = posesGT(1);
                 end
-                if poses(3) < obj.gtHistory(3)
-                    obj.gtHistory(3) = poses(3);
+                if posesGT(3) < obj.gtHistory(3)
+                    obj.gtHistory(3) = posesGT(3);
                 end
-                if poses(3) > obj.gtHistory(4)
-                    obj.gtHistory(4) = poses(3);
+                if posesGT(3) > obj.gtHistory(4)
+                    obj.gtHistory(4) = posesGT(3);
                 end
-                %TODO Fix superposition Ground Truth plot
+                
                 if obj.smooth
-                    plot(ax4, smooth(poses(1, :), 10), smooth(poses(3, :), 10), '-bx', 'MarkerSize', 2);
+                    plot(smooth(poses(1, :), 10), smooth(poses(3, :), 10), '-bx', 'MarkerSize', 2)
                 else
-                    plot(ax4, poses(1, :), poses(3, :), '-bx', 'MarkerSize', 2);
+                    plot(poses(1, :), poses(3, :), '-bx', 'MarkerSize', 2)
                 end
-                    hold (ax4, 'on')
-                    %set(ax4, 'nextplot', 'add')
-                    plot(ax4, obj.groundTruth(1, :), obj.groundTruth(3, :), 'rx','MarkerSize', 2);
-                    hold (ax4, 'off')
+                hold on
+                plot(obj.groundTruth(1, :), obj.groundTruth(3, :), '-rx','MarkerSize', 2)
+                hold off
                 axis ([obj.gtHistory(1) - 5, obj.gtHistory(2) + 5,...
                     obj.gtHistory(3) - 5, obj.gtHistory(4) + 5])
                 title('Full trajectory and Ground-Truth Trajectory')                
             else
                 if obj.smooth
-                    plot(smooth(poses(1, :), 10), smooth(poses(3, :), 10), '-bx', 'MarkerSize', 2);
+                    plot(smooth(poses(1, :), 10), obj.smooth(poses(3, :), 10), '-bx', 'MarkerSize', 2)
                 else
-                    plot(poses(1, :), poses(3, :), '-bx', 'MarkerSize', 2);
+                    plot(poses(1, :), poses(3, :), '-bx', 'MarkerSize', 2)
                 end
                 axis ([minPosesX - 5, maxPosesX + 5, minPosesY - 5, maxPosesY + 5])
                 title('Full Trajectory')
@@ -175,7 +172,7 @@ classdef Output < handle
 
             % Last N poses and current landmarks
             if(size(obj.posesHistory, 1) > obj.recentTrajectorySize)
-                posesLast = obj.posesHistory(end-obj.recentTrajectorySize-1 : end, :)';
+                posesLast = obj.posesHistory(end-obj.recentTrajectorySize+1 : end, :)';
             else
                 posesLast = obj.posesHistory';
             end
@@ -187,8 +184,8 @@ classdef Output < handle
             obj.plotLandmarksHistory(obj.landmarksHistorySize)
 
             % Full trajectory
-            ax4 = subplot(2,4,6);
-            obj.plotFullTrajectory(obj.posesHistory', imageIdx, ax4)
+            subplot(2,4,6)
+            obj.plotFullTrajectory(obj.posesHistory', imageIdx)
         end
         
         function plotGroundTruth(obj, inputHandler, imageIdx)
@@ -207,7 +204,7 @@ classdef Output < handle
             if poses(3) > obj.gtHistory(4)
                 obj.gtHistory(4) = poses(3);
             end
-            plot(poses(1, :), poses(3, :), '-x','MarkerSize', 2) % smooth eventually later
+            plot(poses(1, :), poses(3, :), '-rx','MarkerSize', 2) % smooth eventually later
             axis ([obj.gtHistory(1) - 5, obj.gtHistory(2) + 5,...
                 obj.gtHistory(3) - 5, obj.gtHistory(4) + 5])
             title('Full Ground-Truth Trajectory')

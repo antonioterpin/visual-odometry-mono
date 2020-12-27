@@ -96,9 +96,6 @@ function run(obj, state)
             end
 
             % Plot
-            image = inputHandler.getImage(ii);
-            positionHistory = obj.state.getPositions();
-            landmarksHistory(end+1) = obj.state.getNumberOfLandmarksTrackedAtFrame(ii);
             figure(1);
             obj.outBlock.plot(ii, trackedKeypoints, otherKeypoints, R_CW, t_CW, trackedLandmarks)
 %             figure(2);

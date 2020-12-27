@@ -10,7 +10,7 @@
                         "verbose": true,
                         "nIt": 2,
                         "nSkip": 1,
-                        "adaptive": 0.95,
+                        "adaptive": 0.99,
                         "stopWithNPoints": 90,
                         "errorThreshold": 1,
                         "maxDistance": 300
@@ -21,16 +21,16 @@
                 "Params": {
                         "p3pRANSACIt": 2000,
                         "p3pTolerance": 1,
-                        "adaptive": 0.95,
+                        "adaptive": 0.99,
                         "minInliers": 5
                 }
         },
         "OptBlock": {},
         "OutputBlock": {
-                "superimposeGT": false,
-                "recentTrajectorySize": 20,
-                "landmarksHistorySizePlot": 20,
-                "smooth": true
+                "superimposeGT": true,
+                "recentTrajectorySize": 10,
+                "landmarksHistorySizePlot": 10,
+                "smooth": false
         },
         "DetectorBlock": {
                 "Handler": "Harris",
