@@ -22,10 +22,22 @@
                         "p3pRANSACIt": 2000,
                         "p3pTolerance": 1,
                         "adaptive": 0.99,
-                        "minInliers": 5
+                        "minInliers": 5,
+                        "verbose": true
                 }
         },
-        "OptBlock": {},
+        "OptBlock": {
+                "Handler": "BA",
+                "Params": {
+                        "verbose": true,
+                        "plotMap": 3,
+                        "plotSparsityPattern": 4,
+                        "isActive": true,
+                        "maxBundleSize": 100,
+                        "everyNIterations": 15,
+                        "MaxIter": 20
+                }
+        },
         "OutputBlock": {
                 "superimposeGT": true,
                 "recentTrajectorySize": 10,
@@ -46,10 +58,10 @@
         "Pipeline": {
             "verbose": true,
             "nSkip": 1,
-            "startingFrame": 1,
+            "startingFrame": 80,
             "lastFrame": 550,
             "State": {
-                "lostBelow": 15,
+                "lostBelow": 1000,
                 "verbose": true,
                 "candidatesWindowSize": 2,
                 "cosineThreshold": 0.9

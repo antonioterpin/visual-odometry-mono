@@ -1,15 +1,17 @@
+frameIdx = prevFrameIdx + obj.nSkip;
+
 verboseDisp(obj.verbose, ...
-    '\n\nProcessing frame %d\n=====================\n', ii);
+    '\n\nProcessing frame %d\n=====================\n', frameIdx);
 
 [landmarks, landmarksIdx, keypoints] ...
-    = obj.state.getObservations(ii - obj.nSkip);
+    = obj.state.getObservations(frameIdx - obj.nSkip);
 
-prevImage = inputHandler.getImage(ii - obj.nSkip);
+prevImage = inputHandler.getImage(frameIdx - obj.nSkip);
 descriptors = obj.coBlock.Detector.describeKeypoints(prevImage, keypoints);
 
-image = inputHandler.getImage(ii);
+image = inputHandler.getImage(frameIdx);
 
-[obj.coBlock, trackedKeypoints, ~, trackedLandmarks, ...
+[trackedKeypoints, ~, trackedLandmarks, ...
     R_CW, t_CW, tracked_mask, unmatchedKeypoints, unmatchedDescriptors] ...
     = obj.coBlock.localize(descriptors, landmarks, image);
 

@@ -1,4 +1,4 @@
-classdef PipelineState
+classdef PipelineState < handle
     % PIPELINESTATE Embedds the pipeline state, with the history of poses
     % and 
     % 
@@ -29,7 +29,7 @@ classdef PipelineState
     end
     
     methods
-        function [state, lost] = isLost(state, lost)
+        function lost = isLost(state, lost)
             if nargin > 1
                 state.lost = lost;
             else
@@ -50,6 +50,14 @@ classdef PipelineState
             t_CW = reshape(state.Poses.t_CW(end,:), 3, 1);
         end
         
+        function prevPoseIdx = gotoPrevPose(state)
+            prevPoseIdx = [];
+            if size(state.Poses, 1) > 1
+                prevPoseIdx = state.Poses.Id(end - 1);
+                state.resetToPose(prevPoseIdx);
+            end
+        end
+        
         function [R_CW, t_CW] = getPose(state, poseIdx)
             idx = find(state.Poses.Id == poseIdx);
             
@@ -62,7 +70,7 @@ classdef PipelineState
             N = degree(state.ObservationGraph, pose_nid);
         end
         
-        function state = resetToPose(state, poseIdx)
+        function resetToPose(state, poseIdx)
             [nidx, ~, ~] = find(state.ObservationGraph.Nodes.PoseId > poseIdx ...
                 & ~isfinite(state.ObservationGraph.Nodes.LandmarkId));
             
@@ -71,7 +79,7 @@ classdef PipelineState
             % TODO remove all glanding landamrks
         end
         
-        function state = addLandmarksToPose(state, poseIdx, landmarksIdx, keypoints)
+        function addLandmarksToPose(state, poseIdx, landmarksIdx, keypoints)
             % Take node id
             pose_nid = find(state.ObservationGraph.Nodes.PoseId == poseIdx);
             landmarks_nids = find(max(state.ObservationGraph.Nodes.LandmarkId == landmarksIdx.', [], 2));
@@ -84,7 +92,7 @@ classdef PipelineState
                 state.ObservationGraph, edgeTable);
         end
         
-        function state = addPose(state, poseIdx, R_CW, t_CW)
+        function addPose(state, poseIdx, R_CW, t_CW)
             % ADDPOSE Adds a new pose to the observation graph.
             % 
             % TODO DOCUMENT AGAIN!!
@@ -111,7 +119,7 @@ classdef PipelineState
                 R_CW(:).', t_CW(:).', reshape(-R_CW.' * t_CW, 1, []));
         end
         
-        function [state, landmarks, landmarksIdx, mask] = addLandmarks(state, landmarks)
+        function [landmarks, landmarksIdx, mask] = addLandmarks(state, landmarks)
             % ADDLANDMARKS adds landmarks
             %
             % TODO document again! 3xN
@@ -160,7 +168,7 @@ classdef PipelineState
             keypoints = state.ObservationGraph.Edges.Keypoints(eid, :).';
         end
 
-        function state = addCandidates(state, ...
+        function addCandidates(state, ...
                 frameIndex, unmatchedKeypoints, unmatchedDescriptors)
             % ADDCANDIDATES
             %
@@ -213,7 +221,7 @@ classdef PipelineState
             descriptors = state.Candidates.Descriptors(candidatePoseIdx, :).';
         end
 
-        function state = evaluateCandidates(state, K, ...
+        function evaluateCandidates(state, K, ...
                 frameIndex, keypoints, ...
                 candidateFrameIdx, matchesMask)
             % EVALUATECANDIDATES Updates the observation graph and the
@@ -306,12 +314,12 @@ classdef PipelineState
                 = state.Candidates.Descriptors(candidateIdx, :).';
             state.Candidates(candidateIdx, :) = []; % Remove everything
 
-            state = state.addCandidates(candidateFrameIdx, ...
+            state.addCandidates(candidateFrameIdx, ...
                 candidateKeypoints(:, matchesMask), ...
                 candidateDescriptors(:, matchesMask));
         end
 
-        function state = resetCandidates(state, minPoseIndex)
+        function resetCandidates(state, minPoseIndex)
             % PRUNE Prune the candidates table.
             % 
             % TODO update documentation
@@ -358,55 +366,107 @@ classdef PipelineState
 %             state.Landmarks(landmarksIdx, :) = [];
 %         end
 %         
-%         function [hiddenState, observations] = getBundleAdjustmentDS(state, poseIndices)
-%             % GETBUNDLEADJUSTMENTDS Returns a convenient data structure to
-%             % perform bundle adjustment.
-%             % 
-%             % [hiddenState, observations] = state.getBundleAdjustmentDS()
-%             % returns a convenient data structure to perform bundle
-%             % adjustment from all the currently stored poses.
-%             %
-%             % hiddenState is [tau_1.', ..., tau_n.', P_1.', ..., P_m.'],
-%             % where tau_i is the twist vector, describing the i-th camera 
-%             % pose and P_i is the 3D position of the i-th landmark.
-%             %
-%             % observations is [n, m, O_1.', ..., O_n.'], where n is the
-%             % number of frames, m is the number of landmarks and O_i is 
-%             % [k_i, p_i1.', ..., p_ik_i.', li1, ..., lik_i], where k_i is
-%             % the number landmarks observed at the i-th frame, p_ij is the
-%             % j-th keypoints found in the i-th frame and lij is the index
-%             % of the landmark corresponding to the j-th keypoint of the
-%             % i-th frame.
-%             %
-%             % state.getBundleAdjustmentDS(poseIndices) additionally allows
-%             % to specify which poses to consider when building the
-%             % data structure.
-%             
-%             if nargin < 2
-%                 poseIndices = state.Poses.Id;
-%             end
-%             poseIndices = reshape(poseIndices, 1, []);
-%             
-%             % filter graph
-%             [nodes, ~, ~] = find(state.ObservationGraph.Nodes.PoseId == poseIndices);
-%             nodeTable = state.ObservationGraph.Nodes(nodes, :);
-%             
-%             [edges, ~, ~] = find(state.ObservationGraph.Edges.EndNodes(:,1) == poseIndices);
-%             edgeTable = state.ObservationGraph.Edges(edges, :);
-%             g = graph(edgeTable, nodeTable);
-%             
-%             [posesIdx, ~, ~] = find(state.Poses.Id == poseIndices);
-%             hiddenState = [reshape(state.Poses.Pose(posesIdx, :), 1, []), ...
-%                 reshape(state.Landmarks.Position, 1, [])];
-%             observations = [length(poseIndices), size(state.Landmarks, 1)];
-%             for poseIndex = reshape(posesIdx, 1, [])
-%                 [eid, nid] = outedges(g, poseIndex);
-%                 observations = [observations, ...
-%                     degree(g, poseIndex), ...
-%                     reshape(g.Edges{eid, 'Keypoints'}.', 1, []), ...
-%                     g.Nodes.LandmarkId(nid).'];
-%             end
-%         end
+        function [hiddenState, observations, bundleIdx] ...
+                = getOptimizationDS(state, bundleSize)
+            % GETBUNDLEADJUSTMENTDS Returns a convenient data structure to
+            % perform bundle adjustment.
+            %
+            % TODO update documentation and allow to slide window
+            % 
+            % [hiddenState, observations] = state.getBundleAdjustmentDS()
+            % returns a convenient data structure to perform bundle
+            % adjustment from all the currently stored poses.
+            %
+            % hiddenState is [tau_1.', ..., tau_n.', P_1.', ..., P_m.'],
+            % where tau_i is the twist vector, describing the i-th camera 
+            % pose and P_i is the 3D position of the i-th landmark.
+            %
+            % observations is [n, m, O_1.', ..., O_n.'], where n is the
+            % number of frames, m is the number of landmarks and O_i is 
+            % [k_i, p_i1.', ..., p_ik_i.', li1, ..., lik_i], where k_i is
+            % the number landmarks observed at the i-th frame, p_ij is the
+            % j-th keypoints found in the i-th frame and lij is the index
+            % of the landmark corresponding to the j-th keypoint of the
+            % i-th frame.
+            %
+            % state.getBundleAdjustmentDS(poseIndices) additionally allows
+            % to specify which poses to consider when building the
+            % data structure.
+            
+            arguments
+                state
+                bundleSize = Inf
+            end
+            
+            nPoses = size(state.Poses, 1);
+            bundleSize = min(bundleSize, nPoses);
+            poseIdx = nPoses-bundleSize+1:nPoses;
+            frameIdx = state.Poses.Id(poseIdx);
+            
+            hiddenState = [];
+            observations = [];
+            
+            [posenids, ~] = find(state.ObservationGraph.Nodes.PoseId == frameIdx.');
+            landmarksIdx = [];
+            for i = 1:bundleSize
+                R_CW = reshape(state.Poses.R_CW(poseIdx(i), :), 3, 3);
+                t_WC = reshape(state.Poses.Position(poseIdx(i), :), 3, 1);
+                
+                T_WC = [R_CW.', t_WC; 0, 0, 0, 1];
+                
+                tau_i = homogMatrix2twist(T_WC);
+                hiddenState = [hiddenState; tau_i];
+                
+                [leids, lnids] = outedges(state.ObservationGraph, posenids(i));
+                landmarksIdx_i = state.ObservationGraph.Nodes.LandmarkId(lnids);
+                landmarksIdx = [landmarksIdx; landmarksIdx_i];
+                keypoints = state.ObservationGraph.Edges.Keypoints(leids, :).';
+                
+                observations = [observations; numel(lnids); 
+                    reshape(keypoints, [], 1); landmarksIdx_i];
+            end
+            
+            % So that all observations points to the same landmarks
+            landmarksIdx = unique(landmarksIdx);
+            j = 1;
+            for i = 1:bundleSize
+                k_i = observations(j);
+                landmarksIdx_i = observations(j+2*k_i+1: j+3*k_i);
+                [l_i, ~] = find(landmarksIdx == landmarksIdx_i.');
+                observations(j+2*k_i+1: j+3*k_i) = l_i;
+                
+                j = j+3*k_i+1;
+            end
+            
+            landmarks = state.Landmarks.Position(landmarksIdx, :).';
+            
+            hiddenState = [hiddenState; reshape(landmarks, [], 1)];
+            observations = [bundleSize; size(landmarks, 2); observations];
+            
+            bundleIdx = [numel(poseIdx); 
+                poseIdx.'; landmarksIdx];
+        end
+        
+        function optimizedBundle(state, hiddenState, bundleIdx)
+            nPoses = bundleIdx(1);
+            poseIdx = bundleIdx(2:2+nPoses-1);
+            landmarksIdx = bundleIdx(2+nPoses:end);
+            
+            for i = 1:nPoses
+                tau_i = hiddenState(6*(i-1)+1:6*i);
+                T_WC = twist2HomogMatrix(tau_i);
+                R_CW = T_WC(1:3,1:3).';
+                t_WC = T_WC(1:3,end);
+                t_CW = -R_CW * t_WC;
+                
+                state.Poses.R_CW(poseIdx(i), :) = reshape(R_CW, 1, []);
+                state.Poses.t_CW(poseIdx(i), :) = reshape(t_CW, 1, []);
+                state.Poses.Position(poseIdx(i), :) = reshape(t_WC, 1, []);
+            end
+            
+            landmarks = reshape(hiddenState(6*nPoses+1:end), 3, []);
+            state.Landmarks.Position(landmarksIdx, :) = landmarks.';
+        end
     end
 end
 

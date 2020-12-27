@@ -1,4 +1,4 @@
-classdef (Abstract) InputBlock
+classdef (Abstract) InputBlock < handle
     % INPUTBLOCK Abstract class to handle a generic dataset.
     %
     % To add a dataset, inherit from this class. 

@@ -27,15 +27,20 @@ classdef Config
                 
             obj.InputHandler ...
                 = Config.extractInputBlock(configuration.InputBlock);
+            K = obj.InputHandler.getIntrinsics();
+            
             obj.DetectorHandler ...
                 = Config.extractDetectorBlock(configuration.DetectorBlock);
+            
             obj.InitializationHandler = Config.extractInitBlock(...
                 configuration.InitBlock, obj.DetectorHandler);
+            
             obj.ContinuousOperationHandler ...
-                = Config.extractCOBlock(...
-                configuration.COBlock, obj.DetectorHandler, obj.InputHandler.getIntrinsics());
+                = Config.extractCOBlock(configuration.COBlock, obj.DetectorHandler, K);
+            
             obj.OptimizationHandler ...
-                = Config.extractOptBlock(configuration.OptBlock);
+                = Config.extractOptBlock(configuration.OptBlock, K);
+            
             obj.OutputHandler ...
                 = Config.extractOutputBlock(configuration.OutputBlock, obj.InputHandler);
             
@@ -61,7 +66,7 @@ classdef Config
                 % Create instance of the dataset handler
                 inputBlock = feval(...
                     datasetHandlerClassname, datasetInfo.Path);
-                inputBlock = inputBlock.init();
+                inputBlock.init();
             catch exception
                 error(['Error loading dataset. ', ...
                     'Make sure the provided handler is S, ', ...
@@ -77,7 +82,7 @@ classdef Config
                 initBlockName = initBlockInfo.Handler;
                 initHandlerName ....
                     = sprintf('%sInitBlock', initBlockName);
-                fprintf('Handling dataset through class %s.\n', ...
+                fprintf('Handling initialization through class %s.\n', ...
                     initHandlerName);
 
                 initBlock = feval(initHandlerName);
@@ -88,7 +93,7 @@ classdef Config
             end
             
             if isfield(initBlockInfo, 'Params') && isprop(initBlock, 'configurableProps')
-                initBlock = Config.setParams(initBlock, initBlockInfo.Params);
+                Config.setParams(initBlock, initBlockInfo.Params);
             end
             
             initBlock.Detector = detectorHandler;
@@ -125,7 +130,7 @@ classdef Config
                 coBlockName = coBlockInfo.Handler;
                 coHandlerName ....
                     = sprintf('%sCOBlock', coBlockName);
-                fprintf('Handling dataset through class %s.\n', ...
+                fprintf('Handling continuous operation through class %s.\n', ...
                     coHandlerName);
 
                 coBlock = feval(coHandlerName);
@@ -136,20 +141,42 @@ classdef Config
             end
             
             if isfield(coBlockInfo, 'Params') && isprop(coBlock, 'configurableProps')
-                coBlock = Config.setParams(coBlock, coBlockInfo.Params);
+                Config.setParams(coBlock, coBlockInfo.Params);
             end
             
             coBlock.Detector = detectorHandler;
             coBlock.K = K;
         end
         
-        function optBlock = extractOptBlock(optBlockInfo)
-            optBlock = [];
+        function optBlock = extractOptBlock(optBlockInfo, K)
+            assert(isfield(optBlockInfo, 'Handler'), ...
+                'The name of the handler is required.');
+            
+            try
+                handlerName = optBlockInfo.Handler;
+                handlerClassname ....
+                    = sprintf('%sOptimizationBlock', handlerName);
+                fprintf('Handling optimization through class %s.\n', ...
+                    handlerClassname);
+
+                % Create instance of the dataset handler
+                optBlock = feval(handlerClassname);
+            catch exception
+                error(['Error loading optimization block. ', ...
+                    'Make sure the provided handler is S, ', ...
+                    'where {S}OptimizationBlock is a valid handler.']);
+            end
+            
+            if isfield(optBlockInfo, 'Params')
+                Config.setParams(optBlock, optBlockInfo.Params);
+            end
+            
+            optBlock.K = K;
         end
         
         function outBlock = extractOutputBlock(outBlockInfo, inputHandler)
             outBlock = Output;
-            outBlock = Config.setParams(outBlock, outBlockInfo);
+            Config.setParams(outBlock, outBlockInfo);
             outBlock.inputHandler = inputHandler;
         end
     end

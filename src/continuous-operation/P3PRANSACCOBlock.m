@@ -1,31 +1,27 @@
-classdef P3PRANSACCOBlock
+classdef P3PRANSACCOBlock < handle
     %COBLOCK Summary of this class goes here
     %   Detailed explanation goes here
     
     properties
         Detector %DetectorBlock = HarrisDetectorBlock({})
         K
-        newPointsTolerance = 1
         p3pRANSACIt = 2000
         p3pTolerance = 3
-        triangulationSample = 8
-        newPointsRANSACIt = 2000
         minInliers = 30
         adaptive = 0
-        verbose = true
+        verbose = false
         
         % Data kept in memory between a localization and a triangulation
 %         keypoints
     end
     
     properties (Constant)
-        configurableProps = { 'newPointsTolerance', 'p3pRANSACIt', ...
-            'verbose', 'minInliers', 'adaptive', ...
-            'p3pTolerance', 'triangulationSample', 'newPointsRANSACIt'}
+        configurableProps = { 'p3pRANSACIt', 'p3pTolerance', ...
+            'verbose', 'minInliers', 'adaptive'}
     end
     
     methods 
-        function [obj, keypointsMatched, descriptorsMatched, landmarksMatched, ...
+        function [keypointsMatched, descriptorsMatched, landmarksMatched, ...
                 R_CW, t_CW, tracked_mask, unmatchedKeypoints, unmatchedDescriptors] ...
                 = localize(obj, trackedDescriptors, trackedLandmarks, image)
             
@@ -55,6 +51,7 @@ classdef P3PRANSACCOBlock
                 inliers = 0;
                 R_CW = []; 
                 t_CW = [];
+                verboseDisp(obj.verbose, 'Too few matches to localize.\n', []);
             end
             
             tracked_mask = zeros(size(trackedDescriptors, 2), 1);

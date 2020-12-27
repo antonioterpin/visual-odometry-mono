@@ -22,7 +22,8 @@ classdef PatchMatchingInitBlock < InitBlock
     methods (Access = protected)
         
         function [keypoints,landmarks,descriptors,T_2W,secondIndex, ...
-                unmatchedKeypoints, unmatchedDescriptors] = ...
+                unmatchedKeypoints, unmatchedDescriptors, ...
+                prevFrameKeypoints] = ...
             run_(obj, input, K, fromIndex, T_1W)
         
             verboseDisp(obj.verbose, 'Bootstrapping...');
@@ -69,6 +70,7 @@ classdef PatchMatchingInitBlock < InitBlock
                     T_21 = model;
                     T_2W = T_21(1:3,:) * T_1W;
                     keypoints = p2(1:2, inliers);
+                    prevFrameKeypoints = p1(1:2, inliers);
                     descriptors = descriptors2(:, inliers);
                     
                     % triangulation of valid landmarks (already filtered)
