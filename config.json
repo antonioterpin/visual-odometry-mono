@@ -29,8 +29,8 @@
         "OutputBlock": {
                 "superimposeGT": false,
                 "recentTrajectorySize": 20,
-                "landmarksHistorySize": 20,
-                "smooth": false
+                "landmarksHistorySizePlot": 20,
+                "smooth": true
         },
         "DetectorBlock": {
                 "Handler": "Harris",
