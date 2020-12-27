@@ -27,9 +27,9 @@
         },
         "OptBlock": {},
         "OutputBlock": {
-                "superimposeGT": true,
-                "recentTrajectorySize": 10,
-                "landmarksHistorySizePlot": 10,
+                "superimposeGT": false,
+                "recentTrajectorySize": 15,
+                "landmarksHistorySizePlot": 15,
                 "smooth": false
         },
         "DetectorBlock": {

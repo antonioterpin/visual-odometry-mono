@@ -21,6 +21,17 @@ properties
     lastFrame = Inf
     continuouslyTriangulate = true
     state PipelineState = PipelineState();
+    
+    %KLT IMPLEMENTATION     TODO change this part
+    useKlt = true;  %TODO add to json
+    justInitialized = true; %TODO find another way to do it
+    klt = Klt;
+    p3pRANSACIt = 2000
+    p3pTolerance = 3
+    triangulationSample = 8
+    newPointsRANSACIt = 2000
+    minInliers = 30
+    adaptive = 0
 end
 
 methods
@@ -71,7 +82,12 @@ function run(obj, state)
         if isLost
             initialization;
         else
-            continuousOperation;
+            if obj.useKlt
+                kltBlock;
+                obj.justInitialized = false;
+            else
+                continuousOperation;
+            end
         end
 
         obj.state = obj.state.isLost(isempty(pose));
@@ -86,14 +102,14 @@ function run(obj, state)
             obj.state = obj.state.addLandmarksToPose(...
                 ii, landmarksIdx, trackedKeypoints.');
             
-            % Triangulation
-            otherKeypoints = lostKeypoints;
-            if ~isempty(unmatchedKeypoints) && obj.continuouslyTriangulate
-                obj.state = triangulateNewData(obj.state, K, ...
-                    obj.coBlock.Detector, obj.nSkip, ii, ...
-                    unmatchedKeypoints, unmatchedDescriptors, obj.verbose);
-                otherKeypoints = unmatchedKeypoints;
-            end
+%             % Triangulation
+             otherKeypoints = lostKeypoints;
+%             if ~isempty(unmatchedKeypoints) && obj.continuouslyTriangulate
+%                 obj.state = triangulateNewData(obj.state, K, ...
+%                     obj.coBlock.Detector, obj.nSkip, ii, ...
+%                     unmatchedKeypoints, unmatchedDescriptors, obj.verbose);
+%                 otherKeypoints = unmatchedKeypoints;
+%             end
 
             % Plot
             figure(1);
@@ -103,6 +119,7 @@ function run(obj, state)
         else
             ii = ii - obj.nSkip; % this frame has to be repeated
             obj.state = obj.state.resetToPose(ii);
+%                 obj.justInitialized = true; %TODO remove this (klt)
         end
 
         ii = ii + obj.nSkip;
