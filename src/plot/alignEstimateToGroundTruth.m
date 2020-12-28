@@ -1,5 +1,4 @@
-function p_GC = alignEstimateToGroundTruth(...
-    pp_GC, p_VC)
+function p_GC = alignEstimateToGroundTruth(pp_GC, p_VC)
 % Returns the points of the estimated trajectory p_V_C transformed into the
 % ground truth frame G. The similarity transform is chosen to be
 % such that it results in the lowest error between the aligned trajectory

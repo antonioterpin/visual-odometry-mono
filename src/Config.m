@@ -175,7 +175,7 @@ classdef Config
         end
         
         function outBlock = extractOutputBlock(outBlockInfo, inputHandler)
-            outBlock = Output;
+            outBlock = OutputBlock;
             Config.setParams(outBlock, outBlockInfo);
             outBlock.inputHandler = inputHandler;
         end

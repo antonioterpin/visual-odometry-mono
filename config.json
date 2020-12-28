@@ -31,7 +31,7 @@
                 "Params": {
                         "verbose": true,
                         "plotMap": 3,
-                        "plotSparsityPattern": 4,
+                        "plotSparsityPattern": 0,
                         "isActive": true,
                         "maxBundleSize": 100,
                         "everyNIterations": 15,
@@ -39,7 +39,7 @@
                 }
         },
         "OutputBlock": {
-                "superimposeGroundTruth": false,
+                "plotGroundTruth": true,
                 "recentTrajectorySize": 5,
                 "smooth": false,
                 "color1": "g",
@@ -60,7 +60,7 @@
             "verbose": true,
             "nSkip": 1,
             "startingFrame": 30,
-            "lastFrame": 550,
+            "lastFrame": 150,
             "State": {
                 "lostBelow": 1000,
                 "verbose": true,
