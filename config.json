@@ -39,10 +39,11 @@
                 }
         },
         "OutputBlock": {
-                "superimposeGT": true,
-                "recentTrajectorySize": 10,
-                "landmarksHistorySizePlot": 10,
-                "smooth": false
+                "superimposeGroundTruth": false,
+                "recentTrajectorySize": 5,
+                "smooth": false,
+                "color1": "g",
+                "color2": "y"
         },
         "DetectorBlock": {
                 "Handler": "Harris",
@@ -58,7 +59,7 @@
         "Pipeline": {
             "verbose": true,
             "nSkip": 1,
-            "startingFrame": 80,
+            "startingFrame": 30,
             "lastFrame": 550,
             "State": {
                 "lostBelow": 1000,
