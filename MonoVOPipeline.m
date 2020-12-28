@@ -23,7 +23,7 @@ properties
     state PipelineState = PipelineState();
     
     %KLT IMPLEMENTATION     TODO change this part
-    useKlt = true;  %TODO add to json
+    useKlt = false;  %TODO add to json
     justInitialized = true; %TODO find another way to do it
     klt = Klt;
     p3pRANSACIt = 2000
@@ -31,7 +31,7 @@ properties
     triangulationSample = 8
     newPointsRANSACIt = 2000
     minInliers = 30
-    adaptive = 0
+    adaptive = 0.99
 end
 
 methods
@@ -82,7 +82,7 @@ function run(obj, state)
         if isLost
             initialization;
         else
-            if obj.useKlt
+            if obj.useKlt   %TODO remove this (klt)
                 kltBlock;
                 obj.justInitialized = false;
             else

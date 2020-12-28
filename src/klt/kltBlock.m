@@ -10,19 +10,16 @@ end
 [~, landmarksIdx, keypoints] ...
     = obj.state.getObservations(ii - obj.nSkip);
 
-keypoints = keypoints / 4;
-
 [kpold, keypoints, keypointsLost, keep] =...
     obj.klt.KltTracker(inputHandler, ii, keypoints);
-keypointsLost = keypointsLost * 4;
-keypoints = keypoints * 4;
-kpold = kpold * 4;
+%Filter landmarks
 landmarks = landmarks(:, keep);
 
 %     1. P3P using old landmarks
 [R_CW, t_CW, inliers] = p3pRANSAC(keypoints, landmarks, K,...
     obj.p3pRANSACIt, obj.p3pTolerance, obj.minInliers, obj.adaptive,...
     obj.verbose);
+    %TODO check if it is necessary to filter keypoints after P3PRANSAC
 %       2. Triangulation to generate new landmarks
 poseKlt = reshape(pose, [3, 4]);
 poseKltNew = [R_CW, t_CW];    %new pose

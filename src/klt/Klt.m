@@ -41,8 +41,11 @@ classdef Klt < handle
             %Get images and reduce resolution
             image1 = inputHandler.getImage(imageIdx-obj.nSkip);
             image = inputHandler.getImage(imageIdx);
+            
+            %Reduce size keypoints and images
             image1 = imresize(image1, 0.25);
             image = imresize(image, 0.25);
+            keypoints = keypoints / 4;
             
             dkp = zeros(size(keypoints));
             keep = true(1, size(keypoints, 2));
@@ -53,16 +56,23 @@ classdef Klt < handle
             end
             kpold = keypoints(:, keep);
             keypoints = keypoints + dkp;
-            keypointsLost = keypoints(:, ~keep);
+            keypointsLost = keypoints(:, ~keep);    %not sure it's gonna be useful
             keypoints = keypoints(:, keep);
             
-            %Visualize matches      TODO: remove plots when it works for sure
-            figure(10)
-            imshow(image);
-            hold on;
-            plotMatches(1:size(keypoints, 2), flipud(keypoints), flipud(kpold));
-            hold off;
-            pause(0.1);
+%             %Visualize matches      TODO: remove plots when it works for sure
+%             figure(10)
+%             imshow(image);
+%             hold on;
+%             plotMatches(1:size(keypoints, 2), flipud(keypoints), flipud(kpold));
+%             hold off;
+%             pause(0.1);
+            
+            %Expand again keypoint size
+            kpold = kpold * 4;
+            keypoints = keypoints * 4;
+            keypointsLost = keypointsLost * 4;
+            
+            
         end
 
     end
