@@ -2,8 +2,8 @@ classdef Klt < handle
     
     properties
         inputHandler    %TODO make it work properly
-        r_T = 15;
-        num_iters = 50;
+        r_T = 20;   %originally 15
+        num_iters = 50; %originally 50
         lambda = 0.1;
         nSkip = 1;  %TODO json
         triangulationSample = 8 ;%8-point-alg   %TUNING

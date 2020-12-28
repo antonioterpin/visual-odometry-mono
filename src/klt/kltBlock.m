@@ -8,46 +8,71 @@ verboseDisp(obj.verbose, ...
     obj.klt.KltTracker(inputHandler, ii, keypoints);
 
 landmarks = landmarks(:, keep);
+
 disp('landmarks kept by KLT')
 sum(keep)
 
 [R_CW, t_CW, inliers] = p3pRANSAC(keypoints, landmarks, K, ...
     obj.p3pRANSACIt, obj.p3pTolerance, obj.minInliers, obj.adaptive,...
     obj.verbose);
-    %inliers = true(size(inliers)); %%%%%%%%%%%%%%%%% test
+
+%Update state
 if ~isempty(R_CW) && ~isempty(t_CW)
     kpold = kpold(:, inliers);
-    trackedKeypoints = keypoints(:, inliers);
-    keypointsLost = [keypointsLost, keypoints(:, ~inliers)];
+    keypointsAll = keypoints;
+    keypoints = keypoints(:, inliers);
+    keypointsLost = [keypointsLost, keypointsAll(:, ~inliers)];
     landmarks = landmarks(:, inliers);
     
     disp('landmarks kept by RANSAC')
     sum(inliers)
 
+end
+
+%% Add new keypoints and landmarks
+if size(keypoints, 2) < 100 && ~isempty(pose) && ~isempty(R_CW) && ~isempty(t_CW)
     pose1Matrix = reshape(pose, [3,4]);
     poseMatrix = [R_CW, t_CW];
+    
+    %Track the new keypoints
+    [kpoldToAdd, keypointsToAdd, ~ , keepToAdd] =...
+    obj.klt.KltTracker(inputHandler, ii, keypointsToAdd);
+    
+    if size(keypointsToAdd, 2) > 4     %TODO make 4 a variable among parameters
+    %Landmarks triangulation
+        landmarksToAdd = triangulationForKlt(K, kpoldToAdd,...
+            keypointsToAdd, pose1Matrix, poseMatrix, 4);
+
+        keypoints = [keypoints, keypointsToAdd];
+        kpold = [kpold, keypointsToAdd];
+        landmarks = [landmarks, landmarksToAdd];
+
+        landmarksAddedBool = true;
+    end
+else
+    landmarksAddedBool = false;
 end
 
-%TODO Generate keypointsNew and filter out doubles w.r.t. keypoints
-needNewLandmarks = false;
-if needNewLandmarks     %TODO add this bool
-    %TODO keypoints = [keypoints, keypointsNew] where keypointsNew are
-    %generated before the if statement for every iteration bu not used if
-    %not inside the if
-    
-    landmarks = triangulationForKlt(K, kpold,...
-        trackedKeypoints, pose1Matrix, poseMatrix, 4);
-end
+%% Generate new keypoints far from the ones we already have
+image = inputHandler.getImage(ii);
+keypointsThreshold = 200;    %at least n pixels far     TODO: move this elsewhere
+addKeypointsKlt;
+%keypointsToAdd
 
 %Status stuff
-image = inputHandler.getImage(ii);
 trackedLandmarks = landmarks;
+trackedKeypoints = keypoints;
 
 if ~isempty(R_CW) && ~isempty(t_CW)
     pose = [R_CW(:); t_CW(:)];
     lostKeypoints = keypointsLost;
-    landmarksIdx = landmarksIdx(keep);
+    landmarksIdx = landmarksIdx(keep);  %DOUBT: make sure this doesn't compromise the landmarks adding
     landmarksIdx = landmarksIdx(inliers);
+     if landmarksAddedBool
+        [obj.state, landmarksToAdd1, landmarksIdxToAdd, mask] ...
+            = obj.state.addLandmarks(landmarksToAdd);
+        landmarksIdx = [landmarksIdx; landmarksIdxToAdd];
+     end
 else
     pose = [];
 end
