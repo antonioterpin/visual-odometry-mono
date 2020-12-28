@@ -289,15 +289,15 @@ classdef PipelineState < handle
                 [keypoints(1:2, validMatches); ones(1, N)], ...
                 T_21, K, K, T_1W);
 
-            [state, ~, landmarksIdx, mask] = addLandmarks(state, landmarks(1:3, :));
+            [~, landmarksIdx, mask] = addLandmarks(state, landmarks(1:3, :));
             % update matches mask
             matchesMask(matchesMask > 0) = mask;
             validMatches(validMatches > 0) = mask;
 
             % 3. Add observation
-            state = state.addLandmarksToPose(candidateFrameIdx, ...
+            state.addLandmarksToPose(candidateFrameIdx, ...
                 landmarksIdx, candidateKeypoints(:,matchesMask).');
-            state = state.addLandmarksToPose(frameIndex, ...
+            state.addLandmarksToPose(frameIndex, ...
                 landmarksIdx, keypoints(1:2,validMatches).');
 
             if state.verbose
