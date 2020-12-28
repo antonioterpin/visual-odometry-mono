@@ -170,6 +170,8 @@ classdef OutputBlock < handle
             % Plot
             
             figure(1);
+            set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 1, 0.96]);
+            
             % Image with keypoints
             subplot(plotHeight,plotWidth,[1,2])
             obj.plotCurrentImage(image, p1, p2)
@@ -186,27 +188,20 @@ classdef OutputBlock < handle
             obj.plotFullTrajectory()
         end
         
-%         function plotGroundTruth(obj, inputHandler, imageIdx)
-%             figure(2)
-%             [poses, ~, ~] = inputHandler.getTruePose(imageIdx);
-%             
-%             if poses(1) < obj.gtHistory(1)
-%                 obj.gtHistory(1) = poses(1);
-%             end
-%             if poses(1) > obj.gtHistory(2)
-%                 obj.gtHistory(2) = poses(1);
-%             end
-%             if poses(3) < obj.gtHistory(3)
-%                 obj.gtHistory(3) = poses(3);
-%             end
-%             if poses(3) > obj.gtHistory(4)
-%                 obj.gtHistory(4) = poses(3);
-%             end
-%             plot(poses(1, :), poses(3, :), '-rx','MarkerSize', 2) % smooth eventually later
-%             axis ([obj.gtHistory(1) - 5, obj.gtHistory(2) + 5,...
-%                 obj.gtHistory(3) - 5, obj.gtHistory(4) + 5])
-%             title('Full Ground-Truth Trajectory')
-%             hold on;
-%         end
+        function updateHistory(obj, idx, poses, nLandmarks)
+            arguments
+                obj
+                idx (:,1)
+                poses (:,3)
+                nLandmarks (:,1) = []
+            end
+            
+            if ~isempty(poses)
+                obj.historyData.Pose(idx, :) = poses;
+            end
+            if ~isempty(nLandmarks)
+                obj.historyData.nLandmarks(idx, :) = nLandmarks;
+            end
+        end
     end
 end

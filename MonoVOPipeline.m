@@ -112,6 +112,12 @@ function run(obj, state)
                 
                 % Update state
                 obj.state.optimizedBundle(hiddenState, bundleIdx);
+                
+                % Update output history
+                nPoses = bundleIdx(1);
+                obj.outBlock.updateHistory(...
+                    bundleIdx(2:2+nPoses-1), ...
+                    reshape(bundleIdx(2+nPoses:2+3*nPoses-1), 3, []).');
             end
         end
         
