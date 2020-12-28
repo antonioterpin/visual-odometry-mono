@@ -1,42 +1,53 @@
 verboseDisp(obj.verbose, ...
     '\n\nProcessing frame %d\n=====================\n', ii);
-if obj.justInitialized
-    [landmarks, ~, ~] ...
-    = obj.state.getObservations(ii - obj.nSkip);
-else
-    landmarks = trackedLandmarks;
-end
 
-[~, landmarksIdx, keypoints] ...
+[landmarks, landmarksIdx, keypoints] ...
     = obj.state.getObservations(ii - obj.nSkip);
 
 [kpold, keypoints, keypointsLost, keep] =...
     obj.klt.KltTracker(inputHandler, ii, keypoints);
-%Filter landmarks
-landmarks = landmarks(:, keep);
 
-%     1. P3P using old landmarks
-[R_CW, t_CW, inliers] = p3pRANSAC(keypoints, landmarks, K,...
+landmarks = landmarks(:, keep);
+disp('landmarks kept by KLT')
+sum(keep)
+
+[R_CW, t_CW, inliers] = p3pRANSAC(keypoints, landmarks, K, ...
     obj.p3pRANSACIt, obj.p3pTolerance, obj.minInliers, obj.adaptive,...
     obj.verbose);
-    %TODO check if it is necessary to filter keypoints after P3PRANSAC
-%       2. Triangulation to generate new landmarks
-poseKlt = reshape(pose, [3, 4]);
-poseKltNew = [R_CW, t_CW];    %new pose
+    %inliers = true(size(inliers)); %%%%%%%%%%%%%%%%% test
 if ~isempty(R_CW) && ~isempty(t_CW)
-    [keypoints, landmarks] = triangulationForKlt (K, kpold,...
-        keypoints, poseKlt, poseKltNew, 4);
+    kpold = kpold(:, inliers);
+    trackedKeypoints = keypoints(:, inliers);
+    keypointsLost = [keypointsLost, keypoints(:, ~inliers)];
+    landmarks = landmarks(:, inliers);
+    
+    disp('landmarks kept by RANSAC')
+    sum(inliers)
 
-    image = inputHandler.getImage(ii);
+    pose1Matrix = reshape(pose, [3,4]);
+    poseMatrix = [R_CW, t_CW];
+end
 
-    %errorMetrics stuff
-    trackedKeypoints = keypoints;
-    trackedLandmarks = landmarks;
+%TODO Generate keypointsNew and filter out doubles w.r.t. keypoints
+needNewLandmarks = false;
+if needNewLandmarks     %TODO add this bool
+    %TODO keypoints = [keypoints, keypointsNew] where keypointsNew are
+    %generated before the if statement for every iteration bu not used if
+    %not inside the if
+    
+    landmarks = triangulationForKlt(K, kpold,...
+        trackedKeypoints, pose1Matrix, poseMatrix, 4);
+end
 
+%Status stuff
+image = inputHandler.getImage(ii);
+trackedLandmarks = landmarks;
+
+if ~isempty(R_CW) && ~isempty(t_CW)
     pose = [R_CW(:); t_CW(:)];
     lostKeypoints = keypointsLost;
     landmarksIdx = landmarksIdx(keep);
+    landmarksIdx = landmarksIdx(inliers);
 else
     pose = [];
-    trackedKeypoints = keypoints;
 end
