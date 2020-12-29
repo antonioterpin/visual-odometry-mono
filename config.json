@@ -34,7 +34,7 @@
                         "plotSparsityPattern": 0,
                         "isActive": true,
                         "maxBundleSize": 100,
-                        "everyNIterations": 15,
+                        "everyNIterations": 50,
                         "MaxIter": 20
                 }
         },
@@ -59,8 +59,8 @@
         "Pipeline": {
             "verbose": true,
             "nSkip": 1,
-            "startingFrame": 30,
-            "lastFrame": 150,
+            "startingFrame": 1,
+            "lastFrame": 120,
             "State": {
                 "lostBelow": 1000,
                 "verbose": true,

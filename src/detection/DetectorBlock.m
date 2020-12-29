@@ -1,10 +1,10 @@
-classdef (Abstract) DetectorBlock
+classdef (Abstract) DetectorBlock < handle
     %DETECTORBLOCK Summary of this class goes here
     %   Detailed explanation goes here
     
     properties
-        distribution = 1;
-        configurableProps = { 'distribution' }
+        nKeypoints = 2000
+        configurableProps = { 'nKeypoints' }
     end
     
     methods
@@ -51,8 +51,47 @@ classdef (Abstract) DetectorBlock
         % keypoints and the corresponding descriptors for the given image.
         % keypoints is 2xN, image coordinates of the found keypoints [u; v].
         % descriptors is MxN, descriptors of the found keypoints.
-
-        [keypoints, descriptors] = obj.extractFeatures_(image);
+        
+        % extract keypoints and descriptors from different parts of the
+        % image, according to the distribution provided
+        width = size(image,2);
+        height = size(image,1);
+        
+        nHBlocks = size(obj.nKeypoints, 2);
+        hBlocksSize = ceil(width / nHBlocks);
+        
+        nVBlocks = size(obj.nKeypoints, 1);
+        vBlocksSize = ceil(height / nVBlocks);
+        
+        % tl (top left) indeces
+        uIdx = (0:(nHBlocks-1)) * hBlocksSize + 1;
+        vIdx = (0:(nVBlocks-1)) * vBlocksSize + 1;
+        
+        [tl_u, tl_v] = meshgrid(uIdx, vIdx);
+        tl_u = tl_u(:); 
+        tl_v = tl_v(:);
+        
+        % br (bottom right) indeces
+        br_u = min(tl_u + hBlocksSize, width);
+        br_v = min(tl_v + vBlocksSize, height);
+        
+        % TODO could be done in parfor
+        keypoints = [];
+        figure(5);
+        imshow(image);
+        hold on;
+        for blockIdx = 1:numel(tl_u)
+            tl = [tl_u(blockIdx); tl_v(blockIdx)];
+            br = [br_u(blockIdx); br_v(blockIdx)];
+            crop = image(tl(2):br(2),tl(1):br(1));
+            kp = obj.extractFeatures_(crop, obj.nKeypoints(blockIdx));
+            kp = kp + tl - 1;
+            plot(kp(1,:), kp(2,:), 'x');
+            keypoints = [keypoints, kp];
+        end
+        hold off;
+        
+        descriptors = obj.describeKeypoints_(image, keypoints);
         end
         
         function descriptors = describeKeypoints(obj,image, keypoints)
@@ -71,8 +110,8 @@ classdef (Abstract) DetectorBlock
     methods (Access = protected, Abstract)
         [matchesIndices, p1, p2] = getMatches_(obj,...
             descriptors1, descriptors2, keypoints1, keypoints2)
-        [keypoints, descriptors] = extractFeatures_(obj,image)
-        [descriptors] = describeKeypoints_(obj,image,keypoints);
+        keypoints = extractFeatures_(obj,image,nFeatures)
+        descriptors = describeKeypoints_(obj,image,keypoints);
     end
 end
 

@@ -115,7 +115,6 @@ classdef Config
                     Config.setParams(detectorBlock, detectorBlockInfo.Params);
                 end
             catch exception
-                exception
                 error(['Error loading detector block. ', ...
                     'Make sure the provided handler is S, ', ...
                     'where {S}DetectorBlock is a valid handler.']);
