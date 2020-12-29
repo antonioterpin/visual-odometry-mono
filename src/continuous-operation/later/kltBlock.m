@@ -1,3 +1,6 @@
+triangulationSample = 8;
+newPointsRANSACIt = 2000;
+
 verboseDisp(obj.verbose, ...
     '\n\nProcessing frame %d\n=====================\n', frameIdx);
 

@@ -1,4 +1,4 @@
-classdef P3PRANSACCOBlock < handle
+classdef P3PRANSACCOBlock
     %COBLOCK Summary of this class goes here
     %   Detailed explanation goes here
     

@@ -32,11 +32,13 @@ classdef Config
             obj.DetectorHandler ...
                 = Config.extractDetectorBlock(configuration.DetectorBlock);
             
-            obj.InitializationHandler = Config.extractInitBlock(...
-                configuration.InitBlock, obj.DetectorHandler);
+            obj.InitializationHandler ...
+                = Config.extractInitBlock(configuration.InitBlock, ...
+                    obj.DetectorHandler, obj.InputHandler, K);
             
             obj.ContinuousOperationHandler ...
-                = Config.extractCOBlock(configuration.COBlock, obj.DetectorHandler, K);
+                = Config.extractCOBlock(configuration.COBlock, ...
+                    obj.DetectorHandler, obj.InputHandler, K);
             
             obj.OptimizationHandler ...
                 = Config.extractOptBlock(configuration.OptBlock, K);
@@ -74,7 +76,8 @@ classdef Config
             end
         end
         
-        function initBlock = extractInitBlock(initBlockInfo, detectorHandler)
+        function initBlock = extractInitBlock(initBlockInfo, ...
+                detectorHandler, inputHandler, K)
             assert(isfield(initBlockInfo, 'Handler'), ...
                 'The name of the handler is required.');
             
@@ -96,7 +99,9 @@ classdef Config
                 Config.setParams(initBlock, initBlockInfo.Params);
             end
             
-            initBlock.Detector = detectorHandler;
+            initBlock.detector = detectorHandler;
+            initBlock.inputBlock = inputHandler;
+            initBlock.K = K;
         end
         
         function detectorBlock = extractDetectorBlock(detectorBlockInfo)
@@ -121,7 +126,7 @@ classdef Config
             end
         end
         
-        function coBlock = extractCOBlock(coBlockInfo, detectorHandler, K)
+        function coBlock = extractCOBlock(coBlockInfo, detectorHandler, inputHandler, K)
             assert(isfield(coBlockInfo, 'Handler'), ...
                 'The name of the handler is required.');
             
@@ -143,7 +148,8 @@ classdef Config
                 Config.setParams(coBlock, coBlockInfo.Params);
             end
             
-            coBlock.Detector = detectorHandler;
+            coBlock.detector = detectorHandler;
+            coBlock.inputBlock = inputHandler;
             coBlock.K = K;
         end
         

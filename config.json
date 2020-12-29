@@ -17,13 +17,17 @@
                 }
         },
         "COBlock": {
-                "Handler": "P3PRANSAC",
+                "Handler": "KLT",
                 "Params": {
                         "p3pRANSACIt": 2000,
-                        "p3pTolerance": 1,
+                        "p3pTolerance": 2,
                         "adaptive": 0.99,
                         "minInliers": 5,
-                        "verbose": true
+                        "verbose": true,
+                        "r_T": 20,
+                        "nIt": 50, 
+                        "lambda": 0.1, 
+                        "candidateSuppressionRadius": 10
                 }
         },
         "OptBlock": {
@@ -51,7 +55,7 @@
                         "patchSize": 11,
                         "kappa": 0.08,
                         "nKeypoints": [[2000]],
-                        "nonMaximaSuppressionRadius": 9,
+                        "nonMaximaSuppressionRadius": 5,
                         "descriptorRadius": 11,
                         "lambda": 3,
                         "plotKeypoints": 0,

@@ -21,16 +21,6 @@ properties
     lastFrame = Inf
     continuouslyTriangulate = true
     state PipelineState = PipelineState();
-    
-    %KLT IMPLEMENTATION     TODO change this part
-    useKlt = true;  %TODO add to json
-    klt = Klt;
-    p3pRANSACIt = 2000
-    p3pTolerance = 1
-    triangulationSample = 8
-    newPointsRANSACIt = 2000
-    minInliers = 5
-    adaptive = 0.99
 end
 
 methods
@@ -59,9 +49,6 @@ function run(obj, state)
         obj MonoVOPipeline
         state = [] % Optional, to resume pipeline run, with starting frame
     end
-
-    inputHandler = obj.inputBlock;
-    K = obj.inputBlock.getIntrinsics();
     
     if isempty(state)
         % Run from the beginning
@@ -69,27 +56,23 @@ function run(obj, state)
     else
         obj.state = state;
     end
-
-    landmarksHistory = [];
-    keypointsToAdd = [];    %TODO remove this from here
     
     obj.outBlock.state = obj.state; % sync output with pipeline
+    
+    K = obj.inputBlock.getIntrinsics();
+    keypointsToAdd = []; % TODO remove this
     
     prevFrameIdx = obj.startingFrame;
     obj.outBlock.addHistoryEntry(prevFrameIdx, []);
     nFrameProcessed = 0;
-    while prevFrameIdx < min(inputHandler.getNumberOfImages(), obj.lastFrame)
+    while prevFrameIdx < min(obj.inputBlock.getNumberOfImages(), obj.lastFrame)
         
         % If we are tracking to fre keypoints, we re-initialize
         if obj.state.isLost()
             initialization;
         else
             frameIdx = prevFrameIdx + obj.nSkip;
-            if obj.useKlt   %TODO remove this (klt)
-                kltBlock;
-            else
-                continuousOperation;
-            end
+            continuousOperation;
         end
 
         obj.state.isLost(isempty(pose));
@@ -102,9 +85,8 @@ function run(obj, state)
             % Update state
             obj.state.addPose(frameIdx, R_CW, t_CW);
             obj.state.addLandmarksToPose(frameIdx, landmarksIdx, trackedKeypoints.');
-
+            
             % Triangulation
-            otherKeypoints = lostKeypoints;
 %             if ~isempty(unmatchedKeypoints) && obj.continuouslyTriangulate
 %                 triangulateNewData(obj.state, K, ...
 %                     obj.coBlock.Detector, obj.nSkip, frameIdx, ...
@@ -112,9 +94,11 @@ function run(obj, state)
 %                 otherKeypoints = unmatchedKeypoints;
 %             end
 
+            trackedCandidates = []; % todo fix
+
             % Plot
             figure(1);
-            obj.outBlock.plot(frameIdx, trackedKeypoints, otherKeypoints, trackedLandmarks)
+            obj.outBlock.plot(frameIdx, trackedKeypoints, trackedCandidates, trackedLandmarks)
 %             figure(2);
 %             plot(obj.state.ObservationGraph)
             

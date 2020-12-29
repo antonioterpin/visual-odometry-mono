@@ -3,37 +3,30 @@ classdef (Abstract) InitBlock < handle
     %   Detailed explanation goes here
     
     properties
-        Detector %DetectorBlock = HarrisDetectorBlock({})
+        detector
+        inputBlock
+        K
     end
     
     methods
-        function [keypoints,landmarks,descriptors,T_2W,...
-                secondIndex, unmatchedKeypoints, unmatchedDescriptors, ...
-                prevFrameKeypoints] = ...
-              run(obj, input, K, fromIndex, T_1W)
+        function [keypoints,landmarks,T_2W,secondIndex, candidates, prevFrameKeypoints] ...
+                = run(obj, fromIndex, T_1W)
         % TODO DOCUMENT
         arguments
           obj InitBlock
-          input InputBlock
-          K (3,3)
           fromIndex uint32 = 1
           T_1W {isTransformationMatrix} = eye(3,4)
         end
         if size(T_1W,1) == 3
             T_1W = [T_1W; 0 0 0 1];
         end
-        [keypoints,landmarks,descriptors,T_2W,...
-            secondIndex, unmatchedKeypoints, unmatchedDescriptors, ...
-            prevFrameKeypoints] = ...
-            obj.run_(input, K, fromIndex, T_1W);
+        [keypoints,landmarks,T_2W, secondIndex, candidates, prevFrameKeypoints] = obj.run_(fromIndex, T_1W);
         end
     end
     
     methods (Abstract, Access = protected)
-        [keypoints,landmarks,descriptors,T_2W,...
-            secondIndex, unmatchedKeypoints, unmatchedDescriptors, ...
-            prevFrameKeypoints] = ...
-            run_(obj, input, K, fromIndex, T_1W)
+        [keypoints,landmarks,T_2W,secondIndex, candidates, prevFrameKeypoints] ...
+            = run_(obj, fromIndex, T_1W)
     end
 end
 

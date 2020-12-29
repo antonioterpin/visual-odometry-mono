@@ -4,10 +4,8 @@ verboseDisp(obj.verbose, ...
 [R_CW, t_CW] = obj.state.getLastPose();
 prevPose = [R_CW, t_CW];
 
-[trackedKeypoints, trackedLandmarks, ~, ...
-    pose, frameIdx, unmatchedKeypoints, unmatchedDescriptors, ...
-    prevFrameKeypoints] = ...
-    obj.initBlock.run(inputHandler, K, prevFrameIdx, prevPose);
+[trackedKeypoints, trackedLandmarks, pose, frameIdx, candidates, prevFrameKeypoints] ...
+    = obj.initBlock.run(prevFrameIdx, prevPose);
 
 lostKeypoints = [];
 if ~isempty(pose)
@@ -22,7 +20,7 @@ if ~isempty(pose)
     
     trackedKeypoints = trackedKeypoints(:, mask);
     
-    if ~isempty(unmatchedKeypoints)
+    if ~isempty(candidates)
 %         obj.state = obj.state.addCandidates(ii, ...
 %             unmatchedKeypoints, unmatchedDescriptors);
     end
