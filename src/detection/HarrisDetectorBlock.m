@@ -40,10 +40,10 @@ classdef HarrisDetectorBlock < DetectorBlock
 
         end
         
-        function keypoints = extractFeatures_(obj,image,nFeatures)
+        function keypoints = extractFeatures_(obj,image,nFeatures,mask)
             scores = harrisScore(image, obj.patchSize, obj.kappa);
             keypoints = harrisSelectKeypoints(...
-                scores, nFeatures, obj.nonMaximaSuppressionRadius);
+                scores.*mask, nFeatures, obj.nonMaximaSuppressionRadius);
         end
         
         function [descriptors] = describeKeypoints_(obj,image,keypoints)

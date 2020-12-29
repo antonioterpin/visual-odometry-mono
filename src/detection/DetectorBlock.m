@@ -4,7 +4,9 @@ classdef (Abstract) DetectorBlock < handle
     
     properties
         nKeypoints = 2000
-        configurableProps = { 'nKeypoints' }
+        plotKeypoints = 0;
+        plotMask = 0;
+        configurableProps = { 'nKeypoints', 'plotMask', 'plotKeypoints' }
     end
     
     methods
@@ -44,8 +46,10 @@ classdef (Abstract) DetectorBlock < handle
         
         end
         
-        function [keypoints, descriptors] = extractFeatures(obj, image)
+        function [keypoints, descriptors] = extractFeatures(obj, image, mask)
         % EXTRACTFEATURES Extracts features from an image
+        %
+        % TODO update with mask explanation
         %
         % [keypoints, descriptors] = obj.EXTRACTFEATURES(image) returns the found
         % keypoints and the corresponding descriptors for the given image.
@@ -54,6 +58,11 @@ classdef (Abstract) DetectorBlock < handle
         
         % extract keypoints and descriptors from different parts of the
         % image, according to the distribution provided
+        
+        if nargin < 3
+            mask = ones(size(image));
+        end
+        
         width = size(image,2);
         height = size(image,1);
         
@@ -77,19 +86,27 @@ classdef (Abstract) DetectorBlock < handle
         
         % TODO could be done in parfor
         keypoints = [];
-        figure(5);
-        imshow(image);
-        hold on;
+        
+        if obj.plotKeypoints > 0
+            figure(obj.plotKeypoints);
+            imshow(image);
+            hold on;
+        end
         for blockIdx = 1:numel(tl_u)
             tl = [tl_u(blockIdx); tl_v(blockIdx)];
             br = [br_u(blockIdx); br_v(blockIdx)];
             crop = image(tl(2):br(2),tl(1):br(1));
-            kp = obj.extractFeatures_(crop, obj.nKeypoints(blockIdx));
+            crop_mask = mask(tl(2):br(2),tl(1):br(1));
+            kp = obj.extractFeatures_(crop,obj.nKeypoints(blockIdx),crop_mask);
             kp = kp + tl - 1;
-            plot(kp(1,:), kp(2,:), 'x');
+            if obj.plotKeypoints > 0
+                plot(kp(1,:), kp(2,:), 'x');
+            end
             keypoints = [keypoints, kp];
         end
-        hold off;
+        if obj.plotKeypoints > 0
+            hold off;
+        end
         
         descriptors = obj.describeKeypoints_(image, keypoints);
         end
@@ -105,12 +122,31 @@ classdef (Abstract) DetectorBlock < handle
         
         descriptors = obj.describeKeypoints_(image,keypoints);
         end
+        
+        function mask = getMask(obj, imageSize, kp, suppressionRadius)
+            mask = ones(imageSize);
+            mask = padarray(mask, [suppressionRadius, suppressionRadius]);
+            
+            suppressPatch = zeros(2*suppressionRadius+1);
+            range = -suppressionRadius:suppressionRadius;
+            kp = kp + suppressionRadius;
+            for i = 1:size(kp,2)
+                mask(range + kp(2,i), range + kp(1,i)) = suppressPatch;
+            end
+            
+            mask = mask(suppressionRadius+1:end-suppressionRadius,...
+                suppressionRadius+1:end-suppressionRadius);
+            
+            if obj.plotMask
+                spy(mask);
+            end
+        end
     end
     
     methods (Access = protected, Abstract)
         [matchesIndices, p1, p2] = getMatches_(obj,...
             descriptors1, descriptors2, keypoints1, keypoints2)
-        keypoints = extractFeatures_(obj,image,nFeatures)
+        keypoints = extractFeatures_(obj,image,nFeatures,mask)
         descriptors = describeKeypoints_(obj,image,keypoints);
     end
 end

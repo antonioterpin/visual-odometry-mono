@@ -50,10 +50,13 @@
                 "Params": {
                         "patchSize": 11,
                         "kappa": 0.08,
-                        "nKeypoints": 2000,
-                        "nonMaximaSuppressionRadius": 5,
+                        "nKeypoints": [[10, 75, 75, 75, 50, 20, 50, 75, 75, 75, 10],
+                            [10, 75, 75, 75, 50, 20, 50, 75, 75, 75, 10]],
+                        "nonMaximaSuppressionRadius": 9,
                         "descriptorRadius": 11,
-                        "lambda": 3
+                        "lambda": 3,
+                        "plotKeypoints": 0,
+                        "plotMask": 0
                 }
         },
         "Pipeline": {
