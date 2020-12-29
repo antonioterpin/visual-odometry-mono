@@ -11,10 +11,26 @@ landmarks = landmarks(:, keep);
 
 disp('landmarks kept by KLT')
 sum(keep)
+% 
+% [R_CW, t_CW] = obj.state.getLastPose();
+% T_CW = [R_CW, t_CW; 0,0,0,1];
+% 
+if size(keypoints, 2) > 3
+    [R_CW, t_CW, inliers] = p3pRANSAC(keypoints, landmarks, K, ...
+        obj.p3pRANSACIt, obj.p3pTolerance, obj.minInliers, obj.adaptive,...
+        obj.verbose);
+else
+    R_CW = [];
+    t_CW = [];
+    inliers = zeros(1, size(keypoints, 2));
+end
+% T_last = [R_CW, t_CW; 0,0,0,1];
+% T = T_last * T_CW;
+% R_CW = T(1:3, 1:3);
+% t_CW = T(1:3, 4);
 
-[R_CW, t_CW, inliers] = p3pRANSAC(keypoints, landmarks, K, ...
-    obj.p3pRANSACIt, obj.p3pTolerance, obj.minInliers, obj.adaptive,...
-    obj.verbose);
+%Dummy plot
+% historyPoses = plotTrajectoryProva(R_CW, t_CW, historyPoses);
 
 %Update state
 if ~isempty(R_CW) && ~isempty(t_CW)
@@ -30,7 +46,10 @@ if ~isempty(R_CW) && ~isempty(t_CW)
 end
 
 %% Add new keypoints and landmarks
-if size(keypoints, 2) < 100 && ~isempty(pose) && ~isempty(R_CW) && ~isempty(t_CW)
+if size(keypoints, 2) < 130 && ~isempty(pose) && ~isempty(R_CW) && ~isempty(t_CW) && ~isempty(keypointsToAdd)
+    
+    disp('................ADDING LANDMARKS.............');
+    
     pose1Matrix = reshape(pose, [3,4]);
     poseMatrix = [R_CW, t_CW];
     
@@ -48,6 +67,8 @@ if size(keypoints, 2) < 100 && ~isempty(pose) && ~isempty(R_CW) && ~isempty(t_CW
         landmarks = [landmarks, landmarksToAdd];
 
         landmarksAddedBool = true;
+    else
+        landmarksAddedBool = false;
     end
 else
     landmarksAddedBool = false;
@@ -55,9 +76,9 @@ end
 
 %% Generate new keypoints far from the ones we already have
 image = inputHandler.getImage(ii);
-keypointsThreshold = 200;    %at least n pixels far     TODO: move this elsewhere
+keypointsThreshold = 50;    %at least n pixels far     TODO: move this elsewhere
 addKeypointsKlt;
-%keypointsToAdd
+size(keypointsToAdd)
 
 %Status stuff
 trackedLandmarks = landmarks;
@@ -66,7 +87,7 @@ trackedKeypoints = keypoints;
 if ~isempty(R_CW) && ~isempty(t_CW)
     pose = [R_CW(:); t_CW(:)];
     lostKeypoints = keypointsLost;
-    landmarksIdx = landmarksIdx(keep);  %DOUBT: make sure this doesn't compromise the landmarks adding
+    landmarksIdx = landmarksIdx(keep);
     landmarksIdx = landmarksIdx(inliers);
      if landmarksAddedBool
         [obj.state, landmarksToAdd1, landmarksIdxToAdd, mask] ...
