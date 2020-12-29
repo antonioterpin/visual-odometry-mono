@@ -1,5 +1,5 @@
 [keypointsToAdd, ~] = obj.coBlock.Detector.extractFeatures(image);
-keypointsToAdd = keypointsToAdd(:, 1:250);  %take only best N
+keypointsToAdd = keypointsToAdd(:, 1:300);  %take only best N
 idxKeypointsToRemove = [];
 tic
 for i = 1 : size(keypoints, 2)

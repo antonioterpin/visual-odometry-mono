@@ -11,10 +11,7 @@ landmarks = landmarks(:, keep);
 
 disp('landmarks kept by KLT')
 sum(keep)
-% 
-% [R_CW, t_CW] = obj.state.getLastPose();
-% T_CW = [R_CW, t_CW; 0,0,0,1];
-% 
+
 if size(keypoints, 2) > 3
     [R_CW, t_CW, inliers] = p3pRANSAC(keypoints, landmarks, K, ...
         obj.p3pRANSACIt, obj.p3pTolerance, obj.minInliers, obj.adaptive,...
@@ -24,13 +21,6 @@ else
     t_CW = [];
     inliers = zeros(1, size(keypoints, 2));
 end
-% T_last = [R_CW, t_CW; 0,0,0,1];
-% T = T_last * T_CW;
-% R_CW = T(1:3, 1:3);
-% t_CW = T(1:3, 4);
-
-%Dummy plot
-% historyPoses = plotTrajectoryProva(R_CW, t_CW, historyPoses);
 
 %Update state
 if ~isempty(R_CW) && ~isempty(t_CW)
@@ -48,7 +38,6 @@ end
 %% Add new keypoints and landmarks
 if size(keypoints, 2) < 130 && ~isempty(pose) && ~isempty(R_CW) && ~isempty(t_CW) && ~isempty(keypointsToAdd)
     
-    disp('................ADDING LANDMARKS.............');
     
     pose1Matrix = reshape(pose, [3,4]);
     poseMatrix = [R_CW, t_CW];
@@ -65,6 +54,10 @@ if size(keypoints, 2) < 130 && ~isempty(pose) && ~isempty(R_CW) && ~isempty(t_CW
         keypoints = [keypoints, keypointsToAdd];
         kpold = [kpold, keypointsToAdd];
         landmarks = [landmarks, landmarksToAdd];
+        
+        disp('................ADDED.............');
+        size(landmarksToAdd, 2)
+        disp('................LANDMARKS.............');
 
         landmarksAddedBool = true;
     else
@@ -76,7 +69,7 @@ end
 
 %% Generate new keypoints far from the ones we already have
 image = inputHandler.getImage(ii);
-keypointsThreshold = 50;    %at least n pixels far     TODO: move this elsewhere
+keypointsThreshold = 100;    %at least n pixels far     TODO: move this elsewhere
 addKeypointsKlt;
 size(keypointsToAdd)
 

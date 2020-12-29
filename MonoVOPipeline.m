@@ -26,11 +26,11 @@ properties
     useKlt = true;  %TODO add to json
     klt = Klt;
     p3pRANSACIt = 2000
-    p3pTolerance = 2.5
+    p3pTolerance = 1
     triangulationSample = 8
     newPointsRANSACIt = 2000
-    minInliers = 20
-    adaptive = 0.999
+    minInliers = 5
+    adaptive = 0.99
 end
 
 methods
@@ -73,6 +73,7 @@ function run(obj, state)
 
     % Continuous operation
     landmarksHistory = [];
+    keypointsToAdd = [];    %TODO remove this from here
 
     ii = obj.startingFrame + obj.nSkip;
     while ii <= min(inputHandler.getNumberOfImages(), obj.lastFrame)
@@ -117,7 +118,6 @@ function run(obj, state)
         else
             ii = ii - obj.nSkip; % this frame has to be repeated
             obj.state = obj.state.resetToPose(ii);
-%                 obj.justInitialized = true; %TODO remove this (klt)
         end
 
         ii = ii + obj.nSkip;

@@ -46,7 +46,7 @@
         "Pipeline": {
             "verbose": true,
             "nSkip": 1,
-            "startingFrame": 80,
+            "startingFrame": 1,
             "lastFrame": 550,
             "State": {
                 "lostBelow": 15,
