@@ -36,6 +36,8 @@ for i = 1:N
     end
 end
 
+keypoints(:, keypoints(1,:) == 0) = [];
+
 end
 
 % function out = nonMaximaSuppression(col)

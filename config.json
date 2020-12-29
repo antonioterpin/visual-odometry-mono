@@ -22,34 +22,49 @@
                         "p3pRANSACIt": 2000,
                         "p3pTolerance": 1,
                         "adaptive": 0.99,
-                        "minInliers": 5
+                        "minInliers": 5,
+                        "verbose": true
                 }
         },
-        "OptBlock": {},
+        "OptBlock": {
+                "Handler": "BA",
+                "Params": {
+                        "verbose": true,
+                        "plotMap": 3,
+                        "plotSparsityPattern": 0,
+                        "isActive": true,
+                        "maxBundleSize": 100,
+                        "everyNIterations": 50,
+                        "MaxIter": 20
+                }
+        },
         "OutputBlock": {
-                "superimposeGT": false,
-                "recentTrajectorySize": 15,
-                "landmarksHistorySizePlot": 15,
-                "smooth": false
+                "plotGroundTruth": true,
+                "recentTrajectorySize": 5,
+                "smooth": false,
+                "color1": "g",
+                "color2": "y"
         },
         "DetectorBlock": {
                 "Handler": "Harris",
                 "Params": {
                         "patchSize": 11,
                         "kappa": 0.08,
-                        "nKeypoints": 2000,
-                        "nonMaximaSuppressionRadius": 5,
+                        "nKeypoints": [[2000]],
+                        "nonMaximaSuppressionRadius": 9,
                         "descriptorRadius": 11,
-                        "lambda": 3
+                        "lambda": 3,
+                        "plotKeypoints": 0,
+                        "plotMask": 0
                 }
         },
         "Pipeline": {
             "verbose": true,
             "nSkip": 1,
             "startingFrame": 1,
-            "lastFrame": 550,
+            "lastFrame": 120,
             "State": {
-                "lostBelow": 15,
+                "lostBelow": 20,
                 "verbose": true,
                 "candidatesWindowSize": 2,
                 "cosineThreshold": 0.9

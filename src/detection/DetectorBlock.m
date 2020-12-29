@@ -1,6 +1,13 @@
-classdef (Abstract) DetectorBlock
+classdef (Abstract) DetectorBlock < handle
     %DETECTORBLOCK Summary of this class goes here
     %   Detailed explanation goes here
+    
+    properties
+        nKeypoints = 2000
+        plotKeypoints = 0;
+        plotMask = 0;
+        configurableProps = { 'nKeypoints', 'plotMask', 'plotKeypoints' }
+    end
     
     methods
         function [matchesIndices, p1, p2] = ...
@@ -39,15 +46,69 @@ classdef (Abstract) DetectorBlock
         
         end
         
-        function [keypoints, descriptors] = extractFeatures(obj, image)
+        function [keypoints, descriptors] = extractFeatures(obj, image, mask)
         % EXTRACTFEATURES Extracts features from an image
+        %
+        % TODO update with mask explanation
         %
         % [keypoints, descriptors] = obj.EXTRACTFEATURES(image) returns the found
         % keypoints and the corresponding descriptors for the given image.
         % keypoints is 2xN, image coordinates of the found keypoints [u; v].
         % descriptors is MxN, descriptors of the found keypoints.
-
-        [keypoints, descriptors] = obj.extractFeatures_(image);
+        
+        % extract keypoints and descriptors from different parts of the
+        % image, according to the distribution provided
+        
+        if nargin < 3
+            mask = ones(size(image));
+        end
+        
+        width = size(image,2);
+        height = size(image,1);
+        
+        nHBlocks = size(obj.nKeypoints, 2);
+        hBlocksSize = ceil(width / nHBlocks);
+        
+        nVBlocks = size(obj.nKeypoints, 1);
+        vBlocksSize = ceil(height / nVBlocks);
+        
+        % tl (top left) indeces
+        uIdx = (0:(nHBlocks-1)) * hBlocksSize + 1;
+        vIdx = (0:(nVBlocks-1)) * vBlocksSize + 1;
+        
+        [tl_u, tl_v] = meshgrid(uIdx, vIdx);
+        tl_u = tl_u(:); 
+        tl_v = tl_v(:);
+        
+        % br (bottom right) indeces
+        br_u = min(tl_u + hBlocksSize, width);
+        br_v = min(tl_v + vBlocksSize, height);
+        
+        % TODO could be done in parfor
+        keypoints = [];
+        
+        if obj.plotKeypoints > 0
+            figure(obj.plotKeypoints);
+            imshow(image);
+            hold on;
+        end
+        for blockIdx = 1:numel(tl_u)
+            tl = [tl_u(blockIdx); tl_v(blockIdx)];
+            br = [br_u(blockIdx); br_v(blockIdx)];
+            crop = image(tl(2):br(2),tl(1):br(1));
+            crop_mask = mask(tl(2):br(2),tl(1):br(1));
+            kp = obj.extractFeatures_(crop,obj.nKeypoints(blockIdx),crop_mask);
+            kp = kp + tl - 1;
+            if obj.plotKeypoints > 0
+                plot(kp(1,:), kp(2,:), 'x');
+            end
+            keypoints = [keypoints, kp];
+        end
+        if obj.plotKeypoints > 0
+            hold off;
+        end
+        
+        descriptors = obj.describeKeypoints_(image, keypoints);
         end
         
         function descriptors = describeKeypoints(obj,image, keypoints)
@@ -61,13 +122,32 @@ classdef (Abstract) DetectorBlock
         
         descriptors = obj.describeKeypoints_(image,keypoints);
         end
+        
+        function mask = getMask(obj, imageSize, kp, suppressionRadius)
+            mask = ones(imageSize);
+            mask = padarray(mask, [suppressionRadius, suppressionRadius]);
+            
+            suppressPatch = zeros(2*suppressionRadius+1);
+            range = -suppressionRadius:suppressionRadius;
+            kp = kp + suppressionRadius;
+            for i = 1:size(kp,2)
+                mask(range + kp(2,i), range + kp(1,i)) = suppressPatch;
+            end
+            
+            mask = mask(suppressionRadius+1:end-suppressionRadius,...
+                suppressionRadius+1:end-suppressionRadius);
+            
+            if obj.plotMask
+                spy(mask);
+            end
+        end
     end
     
     methods (Access = protected, Abstract)
         [matchesIndices, p1, p2] = getMatches_(obj,...
             descriptors1, descriptors2, keypoints1, keypoints2)
-        [keypoints, descriptors] = extractFeatures_(obj,image)
-        [descriptors] = describeKeypoints_(obj,image,keypoints);
+        keypoints = extractFeatures_(obj,image,nFeatures,mask)
+        descriptors = describeKeypoints_(obj,image,keypoints);
     end
 end
 

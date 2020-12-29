@@ -5,26 +5,16 @@ classdef HarrisDetectorBlock < DetectorBlock
     properties
         patchSize = 11
         kappa = 0.08
-        nKeypoints = 2000
         nonMaximaSuppressionRadius = 5
         descriptorRadius = 11
         lambda = 3
     end
     
     methods
-        function obj = HarrisDetectorBlock(params)
-            %HARRISDETECTORBLOCK Construct an instance of this class
-            %   Detailed explanation goes here
-            
-            paramNames = {'patchSize', 'kappa', 'nKeypoints', 'lambda', ...
-                'nonMaximaSuppressionRadius', 'descriptorRadius', };
-            
-            for i = 1:length(paramNames)
-                param = paramNames{i};
-                if isfield(params, param)
-                    obj.(param) = params.(param);
-                end
-            end
+        function obj = HarrisDetectorBlock()
+            obj.configurableProps = [obj.configurableProps, ...
+                'patchSize', 'kappa', 'nKeypoints', ...
+                'lambda', 'nonMaximaSuppressionRadius', 'descriptorRadius'];
         end
     end
     
@@ -50,11 +40,10 @@ classdef HarrisDetectorBlock < DetectorBlock
 
         end
         
-        function [keypoints, descriptors] = extractFeatures_(obj,image)
+        function keypoints = extractFeatures_(obj,image,nFeatures,mask)
             scores = harrisScore(image, obj.patchSize, obj.kappa);
             keypoints = harrisSelectKeypoints(...
-                scores, obj.nKeypoints, obj.nonMaximaSuppressionRadius);
-            descriptors = obj.describeKeypoints_(image, keypoints);
+                scores.*mask, nFeatures, obj.nonMaximaSuppressionRadius);
         end
         
         function [descriptors] = describeKeypoints_(obj,image,keypoints)

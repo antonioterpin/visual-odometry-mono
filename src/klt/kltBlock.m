@@ -1,11 +1,11 @@
 verboseDisp(obj.verbose, ...
-    '\n\nProcessing frame %d\n=====================\n', ii);
+    '\n\nProcessing frame %d\n=====================\n', frameIdx);
 
 [landmarks, landmarksIdx, keypoints] ...
-    = obj.state.getObservations(ii - obj.nSkip);
+    = obj.state.getObservations(prevFrameIdx);
 
 [kpold, keypoints, keypointsLost, keep] =...
-    obj.klt.KltTracker(inputHandler, ii, keypoints);
+    obj.klt.KltTracker(inputHandler, frameIdx, keypoints);
 
 landmarks = landmarks(:, keep);
 
@@ -44,7 +44,7 @@ if size(keypoints, 2) < 130 && ~isempty(pose) && ~isempty(R_CW) && ~isempty(t_CW
     
     %Track the new keypoints
     [kpoldToAdd, keypointsToAdd, ~ , keepToAdd] =...
-    obj.klt.KltTracker(inputHandler, ii, keypointsToAdd);
+    obj.klt.KltTracker(inputHandler, frameIdx, keypointsToAdd);
     
     if size(keypointsToAdd, 2) > 4     %TODO make 4 a variable among parameters
     %Landmarks triangulation
@@ -68,7 +68,7 @@ else
 end
 
 %% Generate new keypoints far from the ones we already have
-image = inputHandler.getImage(ii);
+image = inputHandler.getImage(frameIdx);
 keypointsThreshold = 100;    %at least n pixels far     TODO: move this elsewhere
 addKeypointsKlt;
 size(keypointsToAdd)
@@ -83,7 +83,7 @@ if ~isempty(R_CW) && ~isempty(t_CW)
     landmarksIdx = landmarksIdx(keep);
     landmarksIdx = landmarksIdx(inliers);
      if landmarksAddedBool
-        [obj.state, landmarksToAdd1, landmarksIdxToAdd, mask] ...
+        [landmarksToAdd1, landmarksIdxToAdd, mask] ...
             = obj.state.addLandmarks(landmarksToAdd);
         landmarksIdx = [landmarksIdx; landmarksIdxToAdd];
      end
