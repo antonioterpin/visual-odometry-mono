@@ -12,19 +12,10 @@ classdef HarrisDetectorBlock < DetectorBlock
     end
     
     methods
-        function obj = HarrisDetectorBlock(params)
-            %HARRISDETECTORBLOCK Construct an instance of this class
-            %   Detailed explanation goes here
-            
-            paramNames = {'patchSize', 'kappa', 'nKeypoints', 'lambda', ...
-                'nonMaximaSuppressionRadius', 'descriptorRadius', };
-            
-            for i = 1:length(paramNames)
-                param = paramNames{i};
-                if isfield(params, param)
-                    obj.(param) = params.(param);
-                end
-            end
+        function obj = HarrisDetectorBlock()
+            obj.configurableProps = [obj.configurableProps, ...
+                'patchSize', 'kappa', 'nKeypoints', ...
+                'lambda', 'nonMaximaSuppressionRadius', 'descriptorRadius'};
         end
     end
     

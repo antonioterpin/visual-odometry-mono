@@ -110,12 +110,12 @@ classdef Config
                 fprintf('Detecting features through class %s.\n', ...
                     detectorHandlerName);
 
-                params = {};
+                detectorBlock = feval(detectorHandlerName);
                 if isfield(detectorBlockInfo, 'Params')
-                    params = detectorBlockInfo.Params;
+                    Config.setParams(detectorBlock, detectorBlockInfo.Params);
                 end
-                detectorBlock = feval(detectorHandlerName, params);
             catch exception
+                exception
                 error(['Error loading detector block. ', ...
                     'Make sure the provided handler is S, ', ...
                     'where {S}DetectorBlock is a valid handler.']);

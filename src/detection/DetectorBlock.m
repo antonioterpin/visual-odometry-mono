@@ -2,6 +2,11 @@ classdef (Abstract) DetectorBlock
     %DETECTORBLOCK Summary of this class goes here
     %   Detailed explanation goes here
     
+    properties
+        distribution = 1;
+        configurableProps = { 'distribution' }
+    end
+    
     methods
         function [matchesIndices, p1, p2] = ...
             getMatches(obj, descriptors1, descriptors2, keypoints1, keypoints2)
