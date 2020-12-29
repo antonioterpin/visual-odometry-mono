@@ -3,9 +3,10 @@ classdef OutputBlock < handle
     
     properties
         inputHandler
+        state
         
-        historyData = table([],[],[],[],...
-            'VariableNames', {'FrameId', 'Pose', 'PoseGT', 'nLandmarks'});
+        historyData = table([],[],[],...
+            'VariableNames', {'FrameId', 'PoseGT', 'nLandmarks'});
         
         % Params
         plotGroundTruth = false;
@@ -36,9 +37,13 @@ classdef OutputBlock < handle
             end
             hold off;
             title('Current Image');
+            
+            if ~isempty(p1) && ~isempty(p2)
+                legend({'Tracked keypoints', 'Candidates'}, 'Location', 'southoutside')
+            end
         end
         
-        function plotRecentTrajectory (obj, landmarks, R_CW)
+        function plotRecentTrajectory (obj, landmarks)
             %PLOTRECENTTRAJECTORY
 
             % poses is the [Nx3] vector of translation of the camera frame,
@@ -49,17 +54,12 @@ classdef OutputBlock < handle
             
             % Last N poses and current landmarks
 %             nLandmarks = size(landmarks,2);
+
+            poses = obj.state.Poses.Position.';
             
-            if(size(obj.historyData, 1) > obj.recentTrajectorySize)
-                poses = obj.historyData.Pose(end-obj.recentTrajectorySize+1 : end, :).';
-            else
-                poses = obj.historyData.Pose';
+            if(size(poses, 2) > obj.recentTrajectorySize)
+                poses = poses(:, end-obj.recentTrajectorySize+1 : end);
             end
-            
-            %Remove points behind camera
-            landmarksC = R_CW * landmarks;
-            landmarksCY = landmarksC(3, :);
-            landmarks = landmarks(:, landmarksCY > 0);
             
             %Get parameters to adjust axis
             topLan = floor(0.7 * size(landmarks, 2));   %consider 70% of landmarks
@@ -80,11 +80,13 @@ classdef OutputBlock < handle
             maxX = max([poses(1, :), xMax]);
             minY = min([poses(3, :), yMin]);
             maxY = max([poses(3, :), yMax]);
+            
             if obj.smooth
-                plot(smooth(poses(1, :), 10), smooth(poses(3, :), 10), '-bx', 'MarkerSize', 2)
-            else
-                plot(poses(1, :), poses(3, :), '-bx', 'MarkerSize', 2)
+                poses(1,:) = smooth(poses(1, :), 10);
+                poses(3,:) = smooth(poses(3, :), 10);
             end
+            
+            plot(poses(1, :), poses(3, :), '-bx', 'MarkerSize', 2)
             hold on;
             scatter(landmarksPlot(1, :), landmarksPlot(3, :), 4, 'k')
         %     set(gcf, 'GraphicsSmoothing', 'on');
@@ -109,7 +111,7 @@ classdef OutputBlock < handle
             %PLOTFULLTRAJECTORY
             %Get extreme values
             
-            poses = obj.historyData.Pose.';
+            poses = obj.state.Poses.Position.';
             minPosesX = Inf; maxPosesX = -Inf;
             minPosesY = Inf; maxPosesY = -Inf;
             hold off;
@@ -142,9 +144,13 @@ classdef OutputBlock < handle
             
             axis ([minPosesX - 5, maxPosesX + 5, minPosesY - 5, maxPosesY + 5])
             title('Full Trajectory');
+            
+            if obj.plotGroundTruth
+                legend({'Ground truth', 'Estimate'}, 'Location', 'southoutside')
+            end
         end
         
-        function plot (obj, imageIdx, p1, p2, R_CW, t_CW, landmarks)
+        function plot (obj, imageIdx, p1, p2, landmarks)
             %PLOT
             % image is the current image
             % p1 and p2: [Nx2] [U,V] matrices
@@ -155,17 +161,8 @@ classdef OutputBlock < handle
             plotHeight = 2;
             plotWidth = 4;
             image = obj.inputHandler.getImage(imageIdx);
-            gtPose = obj.inputHandler.getTruePose(imageIdx);
             
-            % Remove poses after
-            % Remark: Output is completely sequential!
-            [entriesToRemove, ~] = find(obj.historyData.FrameId >= imageIdx);
-            obj.historyData(entriesToRemove, :) = [];
-            
-            % Add data to history
-            obj.historyData = [obj.historyData; 
-                table(imageIdx, (-R_CW.' * t_CW).', gtPose.', size(landmarks, 2), ...
-                'VariableNames', {'FrameId', 'Pose', 'PoseGT', 'nLandmarks'})];
+            addHistoryEntry(obj, imageIdx, landmarks)
             
             % Plot
             
@@ -177,7 +174,7 @@ classdef OutputBlock < handle
             obj.plotCurrentImage(image, p1, p2)
             
             subplot(plotHeight,plotWidth,[3,4,7,8])
-            obj.plotRecentTrajectory(landmarks, R_CW);
+            obj.plotRecentTrajectory(landmarks);
             
             % Number of triangulated landmarks
             subplot(plotHeight,plotWidth,5)
@@ -188,20 +185,13 @@ classdef OutputBlock < handle
             obj.plotFullTrajectory()
         end
         
-        function updateHistory(obj, idx, poses, nLandmarks)
-            arguments
-                obj
-                idx (:,1)
-                poses (:,3)
-                nLandmarks (:,1) = []
-            end
+        function addHistoryEntry(obj, frameIdx, landmarks)
+            % Add data to history
+            gtPose = obj.inputHandler.getTruePose(frameIdx);
             
-            if ~isempty(poses)
-                obj.historyData.Pose(idx, :) = poses;
-            end
-            if ~isempty(nLandmarks)
-                obj.historyData.nLandmarks(idx, :) = nLandmarks;
-            end
+            obj.historyData = [obj.historyData; 
+                table(frameIdx, gtPose.', size(landmarks, 2), ...
+                'VariableNames', {'FrameId', 'PoseGT', 'nLandmarks'})];
         end
     end
 end

@@ -40,11 +40,6 @@ classdef PipelineState < handle
             lost = state.lost;
         end
         
-        function positions = getPositions(state)
-            % TODO DOCUMENT
-            positions = state.Poses.Position.';
-        end
-        
         function [R_CW, t_CW] = getLastPose(state)
             R_CW = reshape(state.Poses.R_CW(end,:), 3, 3);
             t_CW = reshape(state.Poses.t_CW(end,:), 3, 1);

@@ -60,7 +60,10 @@ function run(obj, state)
         obj.state = state;
     end
     
+    obj.outBlock.state = obj.state; % sync output with pipeline
+    
     prevFrameIdx = obj.startingFrame;
+    obj.outBlock.addHistoryEntry(prevFrameIdx, []);
     nFrameProcessed = 0;
     while prevFrameIdx < min(inputHandler.getNumberOfImages(), obj.lastFrame)
         
@@ -93,7 +96,7 @@ function run(obj, state)
 
             % Plot
             figure(1);
-            obj.outBlock.plot(frameIdx, trackedKeypoints, otherKeypoints, R_CW, t_CW, trackedLandmarks)
+            obj.outBlock.plot(frameIdx, trackedKeypoints, otherKeypoints, trackedLandmarks)
 %             figure(2);
 %             plot(obj.state.ObservationGraph)
             
@@ -112,12 +115,6 @@ function run(obj, state)
                 
                 % Update state
                 obj.state.optimizedBundle(hiddenState, bundleIdx);
-                
-                % Update output history
-                nPoses = bundleIdx(1);
-                obj.outBlock.updateHistory(...
-                    bundleIdx(2:2+nPoses-1), ...
-                    reshape(bundleIdx(2+nPoses:2+3*nPoses-1), 3, []).');
             end
         end
         
