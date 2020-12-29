@@ -1,5 +1,5 @@
 [keypointsToAdd, ~] = obj.coBlock.Detector.extractFeatures(image);
-keypointsToAdd = keypointsToAdd(:, 1:100);  %take only best 100     %TODO check that they are the best 100
+keypointsToAdd = keypointsToAdd(:, 1:150);  %take only best 150     %TODO check that they are the best 100
 idxKeypointsToRemove = [];
 tic
 for i = 1 : size(keypoints, 2)
@@ -10,8 +10,8 @@ for i = 1 : size(keypoints, 2)
         idxKeypoints = intersect(idxX, idxY);
         if ~isempty(idxKeypoints)
             for j = 1 : length(idxKeypoints)
-                if any(intersect(any(keypointsToAdd(2, j) < keypoints(1, i)+keypointsThreshold),...
-                        any(keypointsToAdd(2, j) > keypoints(1, i)-keypointsThreshold)))
+                if any(intersect(any(keypointsToAdd(2, j) < keypoints(2, i)+keypointsThreshold),...
+                        any(keypointsToAdd(2, j) > keypoints(2, i)-keypointsThreshold)))
                     idxKeypointsToRemove = [idxKeypointsToRemove, idxKeypoints(j)];
                 end
             end
