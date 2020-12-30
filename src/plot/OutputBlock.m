@@ -119,7 +119,7 @@ classdef OutputBlock < handle
             if obj.plotGroundTruth
                 posesGT = obj.historyData.PoseGT.';
                 
-                poses = alignEstimateToGroundTruth(posesGT, poses);
+                %poses = alignEstimateToGroundTruth(posesGT, poses);
                 
                 plot(posesGT(1, :), posesGT(3, :), '-ro','MarkerSize', 2)
                 hold on
