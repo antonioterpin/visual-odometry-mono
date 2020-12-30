@@ -11,17 +11,22 @@ if obj.continuouslyTriangulate
 end
 
 % TODO: is keyframe selection + plotting candidates possible without changing everything?
-[R_CW, t_CW, trackedKeypoints, kpMask, trackedCandidates, kpcMask, newKpc] ...
+[R_CW, t_CW, trackedKeypoints, kpMask, trackedCandidates, trackedCandidatesMask, newKpc] ...
     = obj.coBlock.localize(prevFrameIdx, frameIdx, kp, landmarks, candidates);
 
 if isempty(R_CW) || isempty(t_CW)
-    pose = [];
+    localized = false;
 else
-    pose = [R_CW(:); t_CW(:)];
+    localized = true;
+    % Update state
     landmarksIdx = landmarksIdx(kpMask);
     trackedLandmarks = landmarks(:, kpMask);
+    obj.state.addPose(frameIdx, R_CW, t_CW);
+    obj.state.addLandmarksToPose(frameIdx, landmarksIdx, trackedKeypoints.');
+    
+    % Triangulation
     if obj.continuouslyTriangulate
-        obj.state.evaluateCandidates(K, kpcMask, trackedCandidates);
+        obj.state.evaluateCandidates(K, trackedCandidatesMask, trackedCandidates);
         obj.state.addCandidates(frameIdx, newKpc);
     end
 end

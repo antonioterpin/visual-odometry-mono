@@ -9,7 +9,10 @@ prevPose = [R_CW, t_CW];
 
 lostKeypoints = [];
 if ~isempty(pose)
-    pose = reshape(pose(1:3,:), [], 1);
+    R_CW = pose(1:3,1:3);
+    t_CW = pose(1:3,4);
+    localized = true;
+    
     trackedLandmarks = trackedLandmarks(1:3,:);
     
     % Add landmarks
@@ -18,6 +21,9 @@ if ~isempty(pose)
     % Add observations to prev frame
     obj.state.addLandmarksToPose(prevFrameIdx, ...
         landmarksIdx, prevFrameKeypoints(:,mask).');
+    % Add observations to current frame
+    obj.state.addPose(frameIdx, R_CW, t_CW);
+    obj.state.addLandmarksToPose(frameIdx, landmarksIdx, trackedKeypoints.');
     
     trackedKeypoints = trackedKeypoints(:, mask);
     
@@ -27,6 +33,7 @@ if ~isempty(pose)
         obj.state.addCandidates(frameIdx, trackedCandidates);
     end
 else
+    localized = false;
     prevFrameIdx = obj.state.goToPrevPose();
     assert(~isempty(prevFrameIdx), 'Hard reset needed.');
     nFrameProcessed = nFrameProcessed - 1;

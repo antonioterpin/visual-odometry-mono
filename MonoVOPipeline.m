@@ -60,7 +60,6 @@ function run(obj, state)
     obj.outBlock.state = obj.state; % sync output with pipeline
     
     K = obj.inputBlock.getIntrinsics();
-    keypointsToAdd = []; % TODO remove this
     
     prevFrameIdx = obj.startingFrame;
     obj.outBlock.addHistoryEntry(prevFrameIdx, []);
@@ -75,16 +74,9 @@ function run(obj, state)
             continuousOperation;
         end
 
-        obj.state.isLost(isempty(pose));
-        if ~isempty(pose)
-            R_CW = reshape(pose(1:9), 3, 3);
-            t_CW = reshape(pose(10:12), 3, 1);
-            
+        obj.state.isLost(~localized);
+        if localized
             printMetrics;
-            
-            % Update state
-            obj.state.addPose(frameIdx, R_CW, t_CW);
-            obj.state.addLandmarksToPose(frameIdx, landmarksIdx, trackedKeypoints.');
 
             % Plot
             figure(1);
