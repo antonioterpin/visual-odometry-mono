@@ -51,6 +51,7 @@ classdef (Abstract) COBlock < handle
                 
                 % Candidate new keypoints
                 error = max(0, obj.nLandmarksReference - size(trKp, 2));
+                newKpc = [];
                 if error > 0
                     image2 = obj.inputBlock.getImage(frameIdx);
                     mask = obj.detector.getMask(...
