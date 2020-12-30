@@ -13,10 +13,10 @@ classdef (Abstract) COBlock < handle
         adaptive = 0
         verbose = false
         candidateSuppressionRadius = 10
-        nNewCandidates = [[25,25,25],[25,25,25]]
+        nLandmarksReference = 200
         
         configurableProps = { 'p3pRANSACIt', 'p3pTolerance', ...
-            'verbose', 'minInliers', 'adaptive', 'nNewCandidates', ...
+            'verbose', 'minInliers', 'adaptive', 'nLandmarksReference', ...
             'candidateSuppressionRadius'}
     end
     
@@ -50,11 +50,16 @@ classdef (Abstract) COBlock < handle
                 trKp = trKp(:,inliers);
                 
                 % Candidate new keypoints
-                image2 = obj.inputBlock.getImage(frameIdx);
-                mask = obj.detector.getMask(...
-                    size(image2), floor([trKp, trKpc]), obj.candidateSuppressionRadius);
-                newKpc = obj.detector.extractFeatures(...
-                    image2, obj.nNewCandidates, mask);
+                error = max(0, obj.nLandmarksReference - size(trKp, 2));
+                if error > 0
+                    image2 = obj.inputBlock.getImage(frameIdx);
+                    mask = obj.detector.getMask(...
+                        size(image2), floor([trKp, trKpc]), obj.candidateSuppressionRadius);
+
+                    newCandidates = repmat(floor(error/15),3,5);
+                    newKpc = obj.detector.extractFeatures(...
+                        image2, newCandidates, mask);
+                end
             else
                 kpMask = [];
                 newKpc = [];

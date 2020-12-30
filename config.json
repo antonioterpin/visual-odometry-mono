@@ -25,7 +25,7 @@
                         "candidatesSuppressionRadius":20,
                         "r_T": 15,
                         "nItKLT": 100,
-                        "lambda": 2,
+                        "lambda": 5,
                         "keyframeSelectionConfidence": 0.8
                 }
         },
@@ -37,13 +37,10 @@
                         "adaptive": 0.99,
                         "minInliers": 5,
                         "verbose": true,
-                        "nNewCandidates":[
-                            [5,5,5,5,5], 
-                            [5,5,5,5,5], 
-                            [5,5,5,5,5]], 
+                        "nLandmarksReference":200, 
                         "r_T": 15,
                         "nIt": 100, 
-                        "lambda": 2, 
+                        "lambda": 5, 
                         "candidateSuppressionRadius": 11
                 }
         },
@@ -81,8 +78,8 @@
         "Pipeline": {
             "verbose": true,
             "nSkip": 1,
-            "startingFrame": 80,
-            "lastFrame": 120,
+            "startingFrame": 50,
+            "lastFrame": 350,
             "State": {
                 "lostBelow": 10,
                 "verbose": true,
