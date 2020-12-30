@@ -5,6 +5,9 @@ classdef MalagaInputBlock < InputBlock
         LeftImages 
         ImageNameFormat string
         Path string
+        justStartedGTMalaga = true;
+        historyPosesMalaga = [];    %use this to store every pose to fit
+        discretizedPosesMalaga; %matrix of the correct number of poses 
     end
     
     methods
@@ -40,15 +43,33 @@ classdef MalagaInputBlock < InputBlock
         end
         
         function [pose, rotation, translation] = getTruePose_(obj, poseIndex)
-            fid = fopen(sprintf('%s/malaga-urban-dataset-extract-07_all-sensors_GPS.txt',...
+            if obj.justStartedGTMalaga
+                obj.justStartedGTMalaga = false;
+                %Create collection of all GPS positions
+                fid = fopen(sprintf('%s/malaga-urban-dataset-extract-07_all-sensors_GPS.txt',...
                 obj.Path));
-            for i = 1:poseIndex+1   %skip first line
-                line = fgetl(fid);
+                line = fgetl(fid);  %skip first line
+                for i = 2 : 107
+                    line = fgetl(fid);
+                    tmpPose = sscanf(line, '%f');
+                    pose = [-tmpPose(9);
+                        -tmpPose(11);
+                        -tmpPose(10)];
+                    obj.historyPosesMalaga = [obj.historyPosesMalaga, pose];
+                end
+                %Fit positions and generate new datapoints
+                t = 1 : numel(obj.historyPosesMalaga(1, :));
+                xy = [obj.historyPosesMalaga(1, :);
+                    obj.historyPosesMalaga(3, :)];
+                pp = spline(t, xy);
+                tInterp = linspace(1, numel(obj.historyPosesMalaga(1, :)), obj.NumberOfImages);
+                xyInterp = ppval(pp, tInterp);
+                obj.discretizedPosesMalaga = [xyInterp(1, :);
+                                            zeros(1, size(xyInterp, 2));
+                                            xyInterp(2, :)];
             end
-            tmpPose = sscanf(line, '%f');
-            translation = [-tmpPose(9);
-                -tmpPose(11);
-                -tmpPose(10)];
+            
+            translation = obj.discretizedPosesMalaga(:, poseIndex);
             pose = translation;
             rotation = NaN;
         end
