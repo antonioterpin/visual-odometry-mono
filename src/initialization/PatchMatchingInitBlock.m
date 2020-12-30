@@ -2,38 +2,19 @@ classdef PatchMatchingInitBlock < InitBlock
     %PATCHMATCHINGINITBLOCK Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties
-        verbose = false
-        RANSACIt = 2000
-        nSkip = 1
-        nIt = 3
-        adaptive = 0.95
-        stopWithNPoints = 90
-        errorThreshold = 1
-        maxDistance = 200
-    end
-    
-    properties (Constant)
-        configurableProps = {'verbose', 'RANSACIt', 'adaptive', ...
-            'nSkip', 'nIt', 'errorThreshold', 'maxDistance', ...
-            'stopWithNPoints'}
-    end
-    
     methods (Access = protected)
         
-        function [keypoints,landmarks,descriptors,T_2W,secondIndex, ...
-                unmatchedKeypoints, unmatchedDescriptors, ...
-                prevFrameKeypoints] = ...
-            run_(obj, input, K, fromIndex, T_1W)
+        function [keypoints,landmarks,T_2W,secondIndex, candidates, ...
+                prevFrameKeypoints] = run_(obj, fromIndex, T_1W)
         
-            verboseDisp(obj.verbose, 'Bootstrapping...');
+            verboseDisp(obj.verbose, 'Bootstrapping with Patch Matching...');
             
-            image1 = input.getImage(fromIndex);
-            [keypoints1, descriptors1] ...
-                = obj.Detector.extractFeatures(image1);
+            image1 = obj.inputBlock.getImage(fromIndex);
+            keypoints1 = obj.detector.extractFeatures(image1, obj.nKeypoints);
+            descriptors1 = obj.detector.describeKeypoints(image1,keypoints1);
             
             errorTh = obj.errorThreshold^2;
-            otherParams = [K(:); T_1W(:); errorTh; obj.maxDistance];
+            otherParams = [obj.K(:); T_1W(:); errorTh; obj.maxDistance];
             
             % Try bootstrapping with a couple of consecutive frames
             maxInliersCount = -1;
@@ -41,13 +22,13 @@ classdef PatchMatchingInitBlock < InitBlock
                 verboseDisp(obj.verbose, ...
                     'Evaluating frame %d for bootstrapping\n', it);
                 
-                image2 = input.getImage(it);
-                [keypoints2, descriptors2] ...
-                    = obj.Detector.extractFeatures(image2);
-                [matches, p1_, p2_] = obj.Detector.getMatches(...
+                image2 = obj.inputBlock.getImage(it);
+                keypoints2 = obj.detector.extractFeatures(image2, obj.nKeypoints);
+                descriptors2 = obj.detector.describeKeypoints(image2,keypoints2);
+                
+                [matches, p1_, p2_] = obj.detector.getMatches(...
                     descriptors1, descriptors2, keypoints1, keypoints2);
                 unmatchedKeypoints_ = keypoints2(:, matches == 0);
-                unmatchedDescriptors_ = descriptors2(:, matches == 0);
                 
                 if size(p1_, 2) < 8 % Minimum number of parameters
                     verboseDisp(obj.verbose, ...
@@ -71,19 +52,24 @@ classdef PatchMatchingInitBlock < InitBlock
                     T_2W = T_21(1:3,:) * T_1W;
                     keypoints = p2(1:2, inliers);
                     prevFrameKeypoints = p1(1:2, inliers);
-                    descriptors = descriptors2(:, inliers);
                     
                     % triangulation of valid landmarks (already filtered)
                     landmarks = triangulateFromPose(...
-                        p1(:, inliers), p2(:, inliers), T_21, K, K, T_1W);
+                        p1(:, inliers), p2(:, inliers), ...
+                        T_21, obj.K, obj.K, T_1W);
                     
-                    unmatchedKeypoints = unmatchedKeypoints_;
-                    unmatchedDescriptors = unmatchedDescriptors_;
+                    image2_ = image2;
                     
                     if inliercount >= obj.stopWithNPoints
                         break;
                     end
                 end
+            end
+            
+            candidates = [];
+            if ~isempty(keypoints)
+                mask = obj.detector.getMask(size(image2_), keypoints, 10);
+                candidates = obj.detector.extractFeatures(image2_, obj.nCandidates, mask);
             end
         end
     end

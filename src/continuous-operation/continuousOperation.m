@@ -1,24 +1,35 @@
-frameIdx = prevFrameIdx + obj.nSkip;
-
 verboseDisp(obj.verbose, ...
     '\n\nProcessing frame %d\n=====================\n', frameIdx);
 
-[landmarks, landmarksIdx, keypoints] ...
-    = obj.state.getObservations(frameIdx - obj.nSkip);
+% Get previous observations
+[landmarks, landmarksIdx, kp] ...
+    = obj.state.getObservations(prevFrameIdx);
 
-prevImage = inputHandler.getImage(frameIdx - obj.nSkip);
-descriptors = obj.coBlock.Detector.describeKeypoints(prevImage, keypoints);
+candidates = [];
+if obj.continuouslyTriangulate
+    candidates = obj.state.getCandidates();
+end
 
-image = inputHandler.getImage(frameIdx);
-
-[trackedKeypoints, ~, trackedLandmarks, ...
-    R_CW, t_CW, tracked_mask, unmatchedKeypoints, unmatchedDescriptors] ...
-    = obj.coBlock.localize(descriptors, landmarks, image);
+% TODO: is keyframe selection + plotting candidates possible without changing everything?
+[R_CW, t_CW, trackedKeypoints, kpMask, trackedCandidates, trackedCandidatesMask, newKpc] ...
+    = obj.coBlock.localize(prevFrameIdx, frameIdx, kp, landmarks, candidates);
 
 if isempty(R_CW) || isempty(t_CW)
-    pose = [];
+    localized = false;
 else
-    pose = [R_CW(:); t_CW(:)];
-    lostKeypoints = keypoints(:, ~tracked_mask);
-    landmarksIdx = landmarksIdx(tracked_mask);
+    localized = true;
+    % Update state
+    landmarksIdx = landmarksIdx(kpMask);
+    trackedLandmarks = landmarks(:, kpMask);
+    obj.state.addPose(frameIdx, R_CW, t_CW);
+    obj.state.addLandmarksToPose(frameIdx, landmarksIdx, trackedKeypoints.');
+    
+    % Triangulation
+    if obj.continuouslyTriangulate
+        obj.state.evaluateCandidates(K, trackedCandidatesMask, trackedCandidates);
+        obj.state.addCandidates(frameIdx, newKpc);
+    end
+    
+    % display also new candidates
+    trackedCandidates = [trackedCandidates, newKpc];
 end

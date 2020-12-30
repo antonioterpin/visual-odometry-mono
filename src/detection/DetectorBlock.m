@@ -3,10 +3,9 @@ classdef (Abstract) DetectorBlock < handle
     %   Detailed explanation goes here
     
     properties
-        nKeypoints = 2000
         plotKeypoints = 0;
         plotMask = 0;
-        configurableProps = { 'nKeypoints', 'plotMask', 'plotKeypoints' }
+        configurableProps = { 'plotMask', 'plotKeypoints' }
     end
     
     methods
@@ -46,7 +45,7 @@ classdef (Abstract) DetectorBlock < handle
         
         end
         
-        function [keypoints, descriptors] = extractFeatures(obj, image, mask)
+        function keypoints = extractFeatures(obj, image, nKeypoints, mask)
         % EXTRACTFEATURES Extracts features from an image
         %
         % TODO update with mask explanation
@@ -59,56 +58,54 @@ classdef (Abstract) DetectorBlock < handle
         % extract keypoints and descriptors from different parts of the
         % image, according to the distribution provided
         
-        if nargin < 3
-            mask = ones(size(image));
-        end
-        
-        width = size(image,2);
-        height = size(image,1);
-        
-        nHBlocks = size(obj.nKeypoints, 2);
-        hBlocksSize = ceil(width / nHBlocks);
-        
-        nVBlocks = size(obj.nKeypoints, 1);
-        vBlocksSize = ceil(height / nVBlocks);
-        
-        % tl (top left) indeces
-        uIdx = (0:(nHBlocks-1)) * hBlocksSize + 1;
-        vIdx = (0:(nVBlocks-1)) * vBlocksSize + 1;
-        
-        [tl_u, tl_v] = meshgrid(uIdx, vIdx);
-        tl_u = tl_u(:); 
-        tl_v = tl_v(:);
-        
-        % br (bottom right) indeces
-        br_u = min(tl_u + hBlocksSize, width);
-        br_v = min(tl_v + vBlocksSize, height);
-        
-        % TODO could be done in parfor
-        keypoints = [];
-        
-        if obj.plotKeypoints > 0
-            figure(obj.plotKeypoints);
-            imshow(image);
-            hold on;
-        end
-        for blockIdx = 1:numel(tl_u)
-            tl = [tl_u(blockIdx); tl_v(blockIdx)];
-            br = [br_u(blockIdx); br_v(blockIdx)];
-            crop = image(tl(2):br(2),tl(1):br(1));
-            crop_mask = mask(tl(2):br(2),tl(1):br(1));
-            kp = obj.extractFeatures_(crop,obj.nKeypoints(blockIdx),crop_mask);
-            kp = kp + tl - 1;
-            if obj.plotKeypoints > 0
-                plot(kp(1,:), kp(2,:), 'x');
+            if nargin < 4
+                mask = ones(size(image));
             end
-            keypoints = [keypoints, kp];
-        end
-        if obj.plotKeypoints > 0
-            hold off;
-        end
-        
-        descriptors = obj.describeKeypoints_(image, keypoints);
+
+            width = size(image,2);
+            height = size(image,1);
+
+            nHBlocks = size(nKeypoints, 2);
+            hBlocksSize = ceil(width / nHBlocks);
+
+            nVBlocks = size(nKeypoints, 1);
+            vBlocksSize = ceil(height / nVBlocks);
+
+            % tl (top left) indeces
+            uIdx = (0:(nHBlocks-1)) * hBlocksSize + 1;
+            vIdx = (0:(nVBlocks-1)) * vBlocksSize + 1;
+
+            [tl_u, tl_v] = meshgrid(uIdx, vIdx);
+            tl_u = tl_u(:); 
+            tl_v = tl_v(:);
+
+            % br (bottom right) indeces
+            br_u = min(tl_u + hBlocksSize, width);
+            br_v = min(tl_v + vBlocksSize, height);
+
+            % TODO could be done in parfor
+            keypoints = [];
+
+            if obj.plotKeypoints > 0
+                figure(obj.plotKeypoints);
+                imshow(image);
+                hold on;
+            end
+            for blockIdx = 1:numel(tl_u)
+                tl = [tl_u(blockIdx); tl_v(blockIdx)];
+                br = [br_u(blockIdx); br_v(blockIdx)];
+                crop = image(tl(2):br(2),tl(1):br(1));
+                crop_mask = mask(tl(2):br(2),tl(1):br(1));
+                kp = obj.extractFeatures_(crop,nKeypoints(blockIdx),crop_mask);
+                kp = kp + tl - 1;
+                if obj.plotKeypoints > 0
+                    plot(kp(1,:), kp(2,:), 'x');
+                end
+                keypoints = [keypoints, kp];
+            end
+            if obj.plotKeypoints > 0
+                hold off;
+            end
         end
         
         function descriptors = describeKeypoints(obj,image, keypoints)
@@ -138,6 +135,7 @@ classdef (Abstract) DetectorBlock < handle
                 suppressionRadius+1:end-suppressionRadius);
             
             if obj.plotMask
+                figure(obj.plotMask);
                 spy(mask);
             end
         end

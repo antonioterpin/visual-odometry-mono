@@ -25,15 +25,15 @@ function keypoints = harrisSelectKeypoints(scores, N, r)
 keypoints = zeros(2, N);
 temp_scores = padarray(scores, [r r]);
 for i = 1:N
+    if nnz(temp_scores) < 10
+        break;
+    end
     [~, kp] = max(temp_scores(:));
     [row, col] = ind2sub(size(temp_scores), kp);
     kp = [col;row];
     keypoints(:, i) = kp - r;
     temp_scores(kp(2)-r:kp(2)+r, kp(1)-r:kp(1)+r) = ...
         zeros(2*r + 1, 2*r + 1);
-    if nnz(temp_scores) < 10
-        break;
-    end
 end
 
 keypoints(:, keypoints(1,:) == 0) = [];

@@ -3,37 +3,52 @@ classdef (Abstract) InitBlock < handle
     %   Detailed explanation goes here
     
     properties
-        Detector %DetectorBlock = HarrisDetectorBlock({})
+        detector
+        inputBlock
+        K
+        
+        nKeypoints = 2000
+        verbose = false
+        RANSACIt = 2000
+        nSkip = 1
+        nIt = 3
+        adaptive = 0.95
+        stopWithNPoints = 90
+        errorThreshold = 1
+        maxDistance = 200
+        nCandidates = 100
+        candidatesSuppressionRadius = 10
+        
+        configurableProps = {'verbose', 'RANSACIt', 'adaptive', ...
+            'nSkip', 'nIt', 'errorThreshold', 'maxDistance', ...
+            'stopWithNPoints', 'nKeypoints', 'nCandidates', 'candidatesSuppressionRadius'}
     end
     
     methods
-        function [keypoints,landmarks,descriptors,T_2W,...
-                secondIndex, unmatchedKeypoints, unmatchedDescriptors, ...
-                prevFrameKeypoints] = ...
-              run(obj, input, K, fromIndex, T_1W)
+        function [kp,P_W,T_2W,frameIdx,kpc,prevKp] = run(obj, fromIndex, T_1W)
         % TODO DOCUMENT
         arguments
           obj InitBlock
-          input InputBlock
-          K (3,3)
           fromIndex uint32 = 1
           T_1W {isTransformationMatrix} = eye(3,4)
         end
         if size(T_1W,1) == 3
             T_1W = [T_1W; 0 0 0 1];
         end
-        [keypoints,landmarks,descriptors,T_2W,...
-            secondIndex, unmatchedKeypoints, unmatchedDescriptors, ...
-            prevFrameKeypoints] = ...
-            obj.run_(input, K, fromIndex, T_1W);
+        [kp,P_W,T_2W,frameIdx,prevKp] = obj.run_(fromIndex, T_1W);
+
+        kpc = [];
+        if ~isempty(kp) && nnz(obj.nCandidates) > 0
+            image2 = obj.inputBlock.getImage(frameIdx);
+            mask = obj.detector.getMask(size(image2), floor(kp), obj.candidatesSuppressionRadius);
+            kpc = obj.detector.extractFeatures(image2, obj.nCandidates, mask);
+        end
+        
         end
     end
     
     methods (Abstract, Access = protected)
-        [keypoints,landmarks,descriptors,T_2W,...
-            secondIndex, unmatchedKeypoints, unmatchedDescriptors, ...
-            prevFrameKeypoints] = ...
-            run_(obj, input, K, fromIndex, T_1W)
+        [kp,P_W,T_2W,frameIdx,prevKp] = run_(obj, fromIndex, T_1W)
     end
 end
 
