@@ -25,19 +25,15 @@ classdef (Abstract) OptimizationBlock < handle
                 title('Problem before bundle adjustment');
             end
             
-            e = @(hidden_state) obj.error(hiddenState, observations, obj.K);
+            e = @(hiddenState) obj.error(hiddenState, observations, obj.K);
             J = obj.getJacobPattern(hiddenState, observations);
             
             verboseDisp(obj.verbose, 'Starting optimization on bundle...');
-            tic;
             options = optimoptions(@lsqnonlin, ...
                 'Display', 'iter', ...
                 'MaxIter', obj.MaxIter, ...
                 'JacobPattern', J);
             hiddenState = lsqnonlin(e, hiddenState, [], [], options);
-            timeElapsed = toc;
-            verboseDisp(obj.verbose, ...
-                'Optimization on bundle finished after %ds.', timeElapsed);
             
             if obj.plotMap > 0
                 figure(obj.plotMap);
@@ -65,9 +61,9 @@ classdef (Abstract) OptimizationBlock < handle
                 p_W_frames(:, i) = T_W_frame(1:3, end);
             end
 
-            plot(p_W_landmarks(3, :), -p_W_landmarks(1, :), '.');
+            plot(p_W_landmarks(1, :), p_W_landmarks(3, :), '.');
             hold on;
-            plot(p_W_frames(3, :), -p_W_frames(1, :), 'rx', 'Linewidth', 3);
+            plot(p_W_frames(1, :), p_W_frames(3, :), 'rx', 'Linewidth', 3);
             hold off;
 
             if nargin > 2

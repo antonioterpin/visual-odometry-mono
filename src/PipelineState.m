@@ -18,12 +18,13 @@ classdef PipelineState < handle
     % Config params
     properties (Constant)
         configurableProps = {'lostBelow', 'verbose', ...
-            'cosTh', 'candidatesWindowSize'}
+            'cosTh', 'maxDistance'}
     end
     properties
         lostBelow = 20
         verbose = true
-        cosTh = 0.1 % Threshold for triangulation 
+        cosTh = 0.1 % Threshold for triangulation
+        maxDistance = 100
     end
     
     methods
@@ -207,7 +208,10 @@ classdef PipelineState < handle
             %
             % See also evaluateCandidates, addCandidates, pruneCandidates
             
-            candidates = state.Candidates.LastSeen.';
+            candidates = [];
+            if size(state.Candidates,1) > 0
+                candidates = state.Candidates.LastSeen.';
+            end
         end
         
         function resetCandidates(state)
@@ -305,13 +309,14 @@ classdef PipelineState < handle
                 % In front of both cameras
                 isInFront1 = isInFrontOfCamera(P_W(1:3,:), R_1W, t_1W);
                 isInFront2 = isInFrontOfCamera(P_W(1:3,:), R_2W, t_2W);
+                isNear = vecnorm(P_W(1:3,:) + R_2W.' * t_2W,2) < state.maxDistance;
                 
-                inFrontOfBoth = isInFront1 & isInFront2;
-                stillCandidatesKp = [stillCandidatesKp, candidates(:,~inFrontOfBoth)];
-                stillCandidatesLs = [stillCandidatesLs, lastSeen(:,~inFrontOfBoth)];
-                candidates = candidates(:,inFrontOfBoth);
-                lastSeen = lastSeen(:,inFrontOfBoth);
-                P_W = P_W(:,inFrontOfBoth);
+                valid = isInFront1 & isInFront2 & isNear;
+                stillCandidatesKp = [stillCandidatesKp, candidates(:,~valid)];
+                stillCandidatesLs = [stillCandidatesLs, lastSeen(:,~valid)];
+                candidates = candidates(:,valid);
+                lastSeen = lastSeen(:,valid);
+                P_W = P_W(:,valid);
                 
                 % TODO reprojection error check
                 
