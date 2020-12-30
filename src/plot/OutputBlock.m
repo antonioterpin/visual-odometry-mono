@@ -63,12 +63,11 @@ classdef OutputBlock < handle
             
             %Get parameters to adjust axis
             topLan = floor(0.7 * size(landmarks, 2));   %consider 70% of landmarks
-            [~, idxX] = sort(abs(landmarks(1, :) - poses(1, end)), 'ascend');
-            idxX = idxX(1:topLan);
-            [~, idxY] = sort(abs(landmarks(3, :) - poses(3, end)), 'ascend');
-            idxY = idxY(1:topLan);
-            idxPlot = intersect(idxX, idxY);
-            landmarksPlot = landmarks(:, idxPlot);
+            distances = sqrt((abs(landmarks(1, :)-poses(1, end))).^2 +...
+                (abs(landmarks(3, :)-poses(3, end))).^2);
+            [~, idxSort] = sort(distances, 'ascend');
+            idxSort = idxSort(1:topLan);
+            landmarksPlot = landmarks(:, idxSort);
             xMin = min(landmarksPlot(1, :));
             xMax = max(landmarksPlot(1, :));
             yMin = min(landmarksPlot(3, :));
