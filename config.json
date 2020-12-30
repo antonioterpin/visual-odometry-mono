@@ -11,9 +11,12 @@
                         "nIt": 2,
                         "nSkip": 1,
                         "adaptive": 0.99,
-                        "stopWithNPoints": 90,
+                        "nKeypoints": 1000,
+                        "nCandidates": [[5,10,25,5,25,10,5], 
+                            [5,10,25,5,25,10,5]],
+                        "stopWithNPoints": 150,
                         "errorThreshold": 1,
-                        "maxDistance": 300
+                        "maxDistance": 400
                 }
         },
         "COBlock": {
@@ -24,6 +27,7 @@
                         "adaptive": 0.99,
                         "minInliers": 5,
                         "verbose": true,
+                        "nNewCandidates":50,
                         "r_T": 20,
                         "nIt": 50, 
                         "lambda": 0.1, 
@@ -43,18 +47,17 @@
                 }
         },
         "OutputBlock": {
-                "plotGroundTruth": true,
-                "recentTrajectorySize": 5,
+                "plotGroundTruth": false,
+                "recentTrajectorySize": 20,
                 "smooth": false,
                 "color1": "g",
-                "color2": "y"
+                "color2": "r"
         },
         "DetectorBlock": {
                 "Handler": "Harris",
                 "Params": {
                         "patchSize": 11,
                         "kappa": 0.08,
-                        "nKeypoints": [[2000]],
                         "nonMaximaSuppressionRadius": 5,
                         "descriptorRadius": 11,
                         "lambda": 3,
@@ -68,11 +71,10 @@
             "startingFrame": 1,
             "lastFrame": 120,
             "State": {
-                "lostBelow": 20,
+                "lostBelow": 15,
                 "verbose": true,
-                "candidatesWindowSize": 2,
-                "cosineThreshold": 0.9
+                "cosTh": 2
             },
-            "continuouslyTriangulate": false
+            "continuouslyTriangulate": true
         }
 }

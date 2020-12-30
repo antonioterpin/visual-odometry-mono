@@ -8,8 +8,7 @@ classdef PipelineState < handle
         Poses = table([],[],[],[], 'VariableNames', {'Id', 'R_CW', 't_CW', 'Position'})
         Landmarks = table([],[], 'VariableNames', {'Id', 'Position'})
         ObservationGraph = graph % Poses x Landmarks -> (keypoints)
-        Candidates = table([],[],[],...
-            'VariableNames', {'PoseId', 'Keypoints', 'Descriptors'})
+        Candidates
 %         K % The intrinsics matrix
         lastLandmark = 0;
         lost = true;
@@ -19,13 +18,12 @@ classdef PipelineState < handle
     % Config params
     properties (Constant)
         configurableProps = {'lostBelow', 'verbose', ...
-            'cosineThreshold', 'candidatesWindowSize'}
+            'cosTh', 'candidatesWindowSize'}
     end
     properties
         lostBelow = 20
         verbose = true
-        cosineThreshold = 0.1 % Threshold for triangulation 
-        candidatesWindowSize = 3
+        cosTh = 0.1 % Threshold for triangulation 
     end
     
     methods
@@ -148,8 +146,7 @@ classdef PipelineState < handle
             state.ObservationGraph = addnode(state.ObservationGraph, newLandmarks);
         end
         
-        function [landmarks, landmarksIdx, keypoints] ...
-                = getObservations(state, poseId)
+        function [landmarks, landmarksIdx, keypoints] = getObservations(state, poseId)
             % GETLANDMARKS
             % 
             % TODO COMMENT
@@ -163,8 +160,7 @@ classdef PipelineState < handle
             keypoints = state.ObservationGraph.Edges.Keypoints(eid, :).';
         end
 
-        function addCandidates(state, ...
-                frameIndex, unmatchedKeypoints, unmatchedDescriptors)
+        function addCandidates(state, frameIdx, candidates)
             % ADDCANDIDATES
             %
             % TODO COMMENT
@@ -174,20 +170,21 @@ classdef PipelineState < handle
             %
             % See also getCandidates, evaluateCandidates, pruneCandidates
             
-            % Keep a window of state.candidatesWindowSize
-            N = size(unmatchedKeypoints, 2);
+            if isempty(candidates)
+                return;
+            end
             
             % Add candidates
             state.Candidates = [state.Candidates; 
-                table(repmat(frameIndex, N, 1), ...
-                    unmatchedKeypoints.', unmatchedDescriptors.', ...
-                    'VariableNames', {'PoseId', 'Keypoints', 'Descriptors'})];
+                table(repmat(frameIdx, size(candidates, 2), 1),...
+                    candidates.', candidates.',...
+                    'VariableNames', {'FirstId', 'Keypoint', 'LastSeen'})];
             
             verboseDisp(state.verbose, ...
-                'Add %d candidates.\n', N);
+                'Add %d candidates.\n', size(candidates, 2));
         end
 
-        function [keypoints, descriptors] = getCandidates(state, frameIdx)
+        function candidates = getCandidates(state)
             % GETCANDIDATES Returns candidates that can be used to
             % triangulate new landmarks.
             %
@@ -210,15 +207,15 @@ classdef PipelineState < handle
             %
             % See also evaluateCandidates, addCandidates, pruneCandidates
             
-            [candidatePoseIdx, ~, ~] = find(state.Candidates.PoseId == frameIdx);
-            
-            keypoints = state.Candidates.Keypoints(candidatePoseIdx, :).';
-            descriptors = state.Candidates.Descriptors(candidatePoseIdx, :).';
+            candidates = state.Candidates.LastSeen.';
+        end
+        
+        function resetCandidates(state)
+            state.Candidates = table([],[],[],...
+                'VariableNames', {'FirstId', 'Keypoint', 'LastSeen'});
         end
 
-        function evaluateCandidates(state, K, ...
-                frameIndex, keypoints, ...
-                candidateFrameIdx, matchesMask)
+        function evaluateCandidates(state, K, kpcMask, lastSeen)
             % EVALUATECANDIDATES Updates the observation graph and the
             % candidates database given the found matches.
             %
@@ -242,125 +239,108 @@ classdef PipelineState < handle
             % landmarks (Nx3, [X Y Z]) are the triangulated landmarks for
             % the matched candidates.
             
-            candidateIdx = find(state.Candidates.PoseId == candidateFrameIdx);
-            % extract from store
-            candidateKeypoints = state.Candidates.Keypoints(candidateIdx, :).';
-            % filter with mask
-            matchedKeypoints = candidateKeypoints(:, matchesMask);
-            N = size(matchedKeypoints, 2);
+            N = nnz(kpcMask); 
             
-            % 1. Validation
-            bearings1 = normalize(K \ [matchedKeypoints; ones(1, N)], 'norm');
-            bearings2 = normalize(K \ [keypoints; ones(1, N)], 'norm');
-            
-            validMatches = reshape(...
-                ... % evaluation metric
-                abs(dot(bearings1, bearings2)) < state.cosineThreshold, ...
-                [], 1);
-            
-            N = nnz(validMatches);
             if N == 0
-                verboseDisp(state.verbose, ...
-                    'Triangulated points have very low confidence.\n', []);
-                return; % All the triangulations are invalid.
+                state.resetCandidates();
+                return;
             end
             
-            verboseDisp(state.verbose, ...
-                'Triangulated %d points with enough confidence.\n', N);
+            % Filter candidates and update last seen
+            state.Candidates(~kpcMask, :) = [];
+            state.Candidates.LastSeen = lastSeen.';
             
-            % Filter matches based on validMatches
-            matchesMask(matchesMask > 0) = validMatches;
+            [R_2W, t_2W] = state.getLastPose(); % last seen pose
+            lsFrameIdx = state.Poses.Id(end); % last seen
+            
+            for fsFrameIdx = unique(state.Candidates.FirstId).'
+                if fsFrameIdx == lsFrameIdx
+                    continue;
+                end
+                
+                idx = state.Candidates.FirstId == fsFrameIdx;
+                
+                % For all first seen frameIdx
+                candidates = state.Candidates.Keypoint(idx, :).';
+                lastSeen = state.Candidates.LastSeen(idx, :).';
+                
+                % Evaluate candidates
+                [R_1W, t_1W] = state.getPose(fsFrameIdx);
 
-            % 2. Triangulate landmark
-            [R_1W, t_1W] = state.getPose(candidateFrameIdx);
-            [R_2W, t_2W] = state.getPose(frameIndex);
+                T_1W = [R_1W, t_1W; 0, 0, 0, 1];
+                T_2W = [R_2W, t_2W; 0, 0, 0, 1];
+                T_21 = T_2W / T_1W;
+                T_12 = T_1W / T_2W;
+                
+                % 1. Validation
+                N = size(candidates, 2);
+                bearings1 = normalize(K \ [candidates; ones(1, N)], 'norm');
+                bearings2 = T_12(1:3,1:3) * normalize(K \ [lastSeen; ones(1, N)], 'norm');
+                
+                cosalpha = dot(bearings1, bearings2);
+                valid = cosalpha < state.cosTh;
+                
+                N = nnz(valid);
+                if N == 0
+                    verboseDisp(state.verbose, ...
+                        'Triangulated have still low confidence.\n', []);
+                    continue;
+                end
 
-            T_1W = [R_1W, t_1W; 0, 0, 0, 1];
-            T_2W = [R_2W, t_2W; 0, 0, 0, 1];
-            T_21 = T_2W / T_1W;
-
-            landmarks = triangulateFromPose(...
-                [candidateKeypoints(1:2, matchesMask); ones(1, N)], ...
-                [keypoints(1:2, validMatches); ones(1, N)], ...
-                T_21, K, K, T_1W);
-
-            [~, landmarksIdx, mask] = addLandmarks(state, landmarks(1:3, :));
-            % update matches mask
-            matchesMask(matchesMask > 0) = mask;
-            validMatches(validMatches > 0) = mask;
-
-            % 3. Add observation
-            state.addLandmarksToPose(candidateFrameIdx, ...
-                landmarksIdx, candidateKeypoints(:,matchesMask).');
-            state.addLandmarksToPose(frameIndex, ...
-                landmarksIdx, keypoints(1:2,validMatches).');
-
-            if state.verbose
-                N = state.getNumberOfLandmarksTrackedAtFrame(frameIndex);
                 verboseDisp(state.verbose, ...
-                    'Tracking %d landmarks at frame %d.\n', ...
-                    [N, frameIndex]);
+                    '%d points can be triangulated with enough confidence.\n', N);
+                
+                stillCandidatesKp = candidates(:,~valid);
+                stillCandidatesLs = lastSeen(:,~valid);
+                candidates = candidates(:,valid);
+                lastSeen = lastSeen(:,valid);
+                
+                % 2. Triangulate landmark
+                
+                P_W = triangulateFromPose(...
+                    [candidates; ones(1, N)], ...
+                    [lastSeen; ones(1, N)], T_21, K, K, T_1W);
+                
+                % In front of both cameras
+                isInFront1 = isInFrontOfCamera(P_W(1:3,:), R_1W, t_1W);
+                isInFront2 = isInFrontOfCamera(P_W(1:3,:), R_2W, t_2W);
+                
+                inFrontOfBoth = isInFront1 & isInFront2;
+                stillCandidatesKp = [stillCandidatesKp, candidates(:,~inFrontOfBoth)];
+                stillCandidatesLs = [stillCandidatesLs, lastSeen(:,~inFrontOfBoth)];
+                candidates = candidates(:,inFrontOfBoth);
+                lastSeen = lastSeen(:,inFrontOfBoth);
+                P_W = P_W(:,inFrontOfBoth);
+                
+                % TODO reprojection error check
+                
+                [~, landmarksIdx, mask] = addLandmarks(state, P_W(1:3, :));
+                stillCandidatesKp = [stillCandidatesKp, candidates(:,~mask)];
+                stillCandidatesLs = [stillCandidatesLs, lastSeen(:,~mask)];
+                candidates = candidates(:,mask);
+                lastSeen = lastSeen(:,mask);
+                
+                % 3. Add observation
+                state.addLandmarksToPose(fsFrameIdx, landmarksIdx, candidates.');
+                state.addLandmarksToPose(lsFrameIdx, landmarksIdx, lastSeen.');
+
+                if state.verbose
+                    N = state.getNumberOfLandmarksTrackedAtFrame(lsFrameIdx);
+                    verboseDisp(state.verbose, ...
+                        'Tracking %d landmarks at frame %d.\n', [N, lsFrameIdx]);
+                end
+
+                % 4. Remove triangulated candidates
+                state.Candidates(idx,:) = [];
+                if ~isempty(stillCandidatesLs)
+                    state.Candidates = [state.Candidates;
+                    table(repmat(fsFrameIdx, size(stillCandidatesLs, 2), 1), ...
+                        stillCandidatesKp.', stillCandidatesLs.', ...
+                        'VariableNames', {'FirstId', 'Keypoint', 'LastSeen'})];
+                end
             end
-
-            % 4. Remove triangulated candidates
-            % We directly replace the old candidates with the remaining
-            % ones.
-            candidateDescriptors ...
-                = state.Candidates.Descriptors(candidateIdx, :).';
-            state.Candidates(candidateIdx, :) = []; % Remove everything
-
-            state.addCandidates(candidateFrameIdx, ...
-                candidateKeypoints(:, matchesMask), ...
-                candidateDescriptors(:, matchesMask));
         end
-
-        function resetCandidates(state, minPoseIndex)
-            % PRUNE Prune the candidates table.
-            % 
-            % TODO update documentation
-            %
-            % state = state.pruneCandidates(minPoseIndex) remove all 
-            % candidates from poses associated to an index less or equal to
-            % minPoseIndex.
-            %
-            % See also addCandidates, getCandidates, evaluateCandidates
-            % 
-            % TODO maxDistance based pruning
-            
-            % Candidates
-            state.Candidates(state.Candidates.PoseId < minPoseIndex, :) = [];
-        end
-%
-%         function state = prune(state, minPoseIndex)
-%             % PRUNE Prune the observation graph.
-%             % 
-%             % state = state.prune(minPoseIndex) remove all poses with an 
-%             % index less or equal to minPoseIndex. Removes also all
-%             % landmarks that will remain unobserved, i.e., such that there
-%             % are no poses stored in which the landmarks have been obseved,
-%             % i.e., nodes with zero degree in the observation graph.
-%             % 
-%             % TODO maxDistance based pruning
-%             % TODO save on file before pruning
-%             
-%             % Remove poses
-%             posesToRemove = state.Poses.Id(state.Poses.Id < minPoseIndex);
-%             [poseNodesToRemove, ~, ~] = find(state.ObservationGraph.Nodes.PoseId == posesToRemove.');
-%             state.ObservationGraph = rmnode(state.ObservationGraph, poseNodesToRemove);
-%             [poseIdx, ~, ~] = find(state.Poses.Id == posesToRemove.');
-%             state.Poses(poseIdx, :) = [];
-%             
-%             % Remove Landmarks not observed by any pose
-%             [landmarkNodesToRemove, ~, ~] = find(isfinite(state.ObservationGraph.Nodes.LandmarkId));
-%             % No observations
-%             landmarkNodesToRemove = landmarkNodesToRemove(...
-%                 0 == degree(state.ObservationGraph, landmarkNodesToRemove));
-%             landmarksToRemove = state.ObservationGraph.Nodes.LandmarkId(landmarkNodesToRemove);
-%             state.ObservationGraph = rmnode(state.ObservationGraph, landmarkNodesToRemove);
-%             [landmarksIdx, ~, ~] = find(state.Landmarks.Id == landmarksToRemove.');
-%             state.Landmarks(landmarksIdx, :) = [];
-%         end
-%         
+        
         function [hiddenState, observations, bundleIdx] ...
                 = getOptimizationDS(state, bundleSize)
             % GETBUNDLEADJUSTMENTDS Returns a convenient data structure to

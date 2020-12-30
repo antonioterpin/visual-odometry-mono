@@ -22,20 +22,21 @@ classdef (Abstract) COBlock < handle
                 localize(obj, prevFrameIdx, frameIdx, kp, P_W, kpc)
             
             % 1. Keyframe selection & tracking
-%             nKp = size(kp, 2);
-%             [trKpKpc, kpMask, newKpc] = obj.track(prevFrameIdx, frameIdx, [kp; kp_c]);
-            [trKp, kpMask, newKpc] = obj.track(prevFrameIdx, frameIdx, kp);
-            kpcMask = [];
-            trKpc = [];
+            nKp = size(kp, 2);
+            [trKpKpc, kpkpcMask, newKpc] = obj.track(prevFrameIdx, frameIdx, [kp, kpc]);
+%             [trKp, kpMask, newKpc] = obj.track(prevFrameIdx, frameIdx, kp);
+%             kpcMask = [];
+%             trKpc = [];
             
-%             trKpMask = kpMask(1:nKp);
-%             trKpcMask = kpMask(nKp+1:end);
+            kpMask = kpkpcMask(1:nKp);
+            kpcMask = kpkpcMask(nKp+1:end);
             
-%             trKp = trKpKpc(:, 1:nnz(kpMask));
-%             trKpc = trKpKpc(:, nnz(kpMask)+1:end);
+            trKp = trKpKpc(:, 1:nnz(kpMask));
+            trKpc = trKpKpc(:, nnz(kpMask)+1:end);
             
             verboseDisp(obj.verbose, ...
-                'Found %d matches.\n', size(trKp, 2));
+                'Found %d matches and tracked %d candidates.\n', ...
+                [size(trKp,2), size(trKpc,2)]);
             
             % 2. Localization
             if size(trKp, 2) >= obj.minInliers

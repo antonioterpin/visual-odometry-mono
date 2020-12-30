@@ -85,16 +85,6 @@ function run(obj, state)
             % Update state
             obj.state.addPose(frameIdx, R_CW, t_CW);
             obj.state.addLandmarksToPose(frameIdx, landmarksIdx, trackedKeypoints.');
-            
-            % Triangulation
-%             if ~isempty(unmatchedKeypoints) && obj.continuouslyTriangulate
-%                 triangulateNewData(obj.state, K, ...
-%                     obj.coBlock.Detector, obj.nSkip, frameIdx, ...
-%                     unmatchedKeypoints, unmatchedDescriptors, obj.verbose);
-%                 otherKeypoints = unmatchedKeypoints;
-%             end
-
-            trackedCandidates = []; % todo fix
 
             % Plot
             figure(1);

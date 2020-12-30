@@ -7,12 +7,14 @@ classdef KLTCOBlock < COBlock
         nIt = 50
         lambda = 10^-3;
         candidateSuppressionRadius = 10;
+        nNewCandidates = 2000;
     end
     
     methods
         function obj = KLTCOBlock()
             obj.configurableProps = [obj.configurableProps, ...
-                'r_T', 'nIt', 'lambda', 'candidateSuppressionRadius'];
+                'r_T', 'nIt', 'lambda', 'candidateSuppressionRadius', ...
+                'nNewCandidates'];
         end
     end
     
@@ -44,7 +46,8 @@ classdef KLTCOBlock < COBlock
             % Candidate new keypoints
             mask = obj.detector.getMask(...
                 size(image2), floor(trKp), obj.candidateSuppressionRadius);
-            newKpc = obj.detector.extractFeatures(image2, mask);
+            newKpc = obj.detector.extractFeatures(...
+                image2, obj.nNewCandidates, mask);
         end
     end
 end

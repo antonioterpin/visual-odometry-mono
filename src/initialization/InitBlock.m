@@ -6,6 +6,21 @@ classdef (Abstract) InitBlock < handle
         detector
         inputBlock
         K
+        
+        nKeypoints = 2000
+        verbose = false
+        RANSACIt = 2000
+        nSkip = 1
+        nIt = 3
+        adaptive = 0.95
+        stopWithNPoints = 90
+        errorThreshold = 1
+        maxDistance = 200
+        nCandidates = 100
+        
+        configurableProps = {'verbose', 'RANSACIt', 'adaptive', ...
+            'nSkip', 'nIt', 'errorThreshold', 'maxDistance', ...
+            'stopWithNPoints', 'nKeypoints', 'nCandidates'}
     end
     
     methods

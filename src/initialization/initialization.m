@@ -4,7 +4,7 @@ verboseDisp(obj.verbose, ...
 [R_CW, t_CW] = obj.state.getLastPose();
 prevPose = [R_CW, t_CW];
 
-[trackedKeypoints, trackedLandmarks, pose, frameIdx, candidates, prevFrameKeypoints] ...
+[trackedKeypoints, trackedLandmarks, pose, frameIdx, trackedCandidates, prevFrameKeypoints] ...
     = obj.initBlock.run(prevFrameIdx, prevPose);
 
 lostKeypoints = [];
@@ -16,13 +16,15 @@ if ~isempty(pose)
     [trackedLandmarks, landmarksIdx, mask] = obj.state.addLandmarks(trackedLandmarks);
     
     % Add observations to prev frame
-    obj.state.addLandmarksToPose(prevFrameIdx, landmarksIdx, prevFrameKeypoints.');
+    obj.state.addLandmarksToPose(prevFrameIdx, ...
+        landmarksIdx, prevFrameKeypoints(:,mask).');
     
     trackedKeypoints = trackedKeypoints(:, mask);
     
-    if ~isempty(candidates)
-%         obj.state = obj.state.addCandidates(ii, ...
-%             unmatchedKeypoints, unmatchedDescriptors);
+    if ~isempty(trackedCandidates) && obj.continuouslyTriangulate
+        % Reset candidates (after init)
+        obj.state.resetCandidates();
+        obj.state.addCandidates(frameIdx, trackedCandidates);
     end
 else
     prevFrameIdx = obj.state.goToPrevPose();

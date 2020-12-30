@@ -3,10 +3,9 @@ classdef (Abstract) DetectorBlock < handle
     %   Detailed explanation goes here
     
     properties
-        nKeypoints = 2000
         plotKeypoints = 0;
         plotMask = 0;
-        configurableProps = { 'nKeypoints', 'plotMask', 'plotKeypoints' }
+        configurableProps = { 'plotMask', 'plotKeypoints' }
     end
     
     methods
@@ -46,7 +45,7 @@ classdef (Abstract) DetectorBlock < handle
         
         end
         
-        function keypoints = extractFeatures(obj, image, mask)
+        function keypoints = extractFeatures(obj, image, nKeypoints, mask)
         % EXTRACTFEATURES Extracts features from an image
         %
         % TODO update with mask explanation
@@ -59,17 +58,17 @@ classdef (Abstract) DetectorBlock < handle
         % extract keypoints and descriptors from different parts of the
         % image, according to the distribution provided
         
-            if nargin < 3
+            if nargin < 4
                 mask = ones(size(image));
             end
 
             width = size(image,2);
             height = size(image,1);
 
-            nHBlocks = size(obj.nKeypoints, 2);
+            nHBlocks = size(nKeypoints, 2);
             hBlocksSize = ceil(width / nHBlocks);
 
-            nVBlocks = size(obj.nKeypoints, 1);
+            nVBlocks = size(nKeypoints, 1);
             vBlocksSize = ceil(height / nVBlocks);
 
             % tl (top left) indeces
@@ -97,7 +96,7 @@ classdef (Abstract) DetectorBlock < handle
                 br = [br_u(blockIdx); br_v(blockIdx)];
                 crop = image(tl(2):br(2),tl(1):br(1));
                 crop_mask = mask(tl(2):br(2),tl(1):br(1));
-                kp = obj.extractFeatures_(crop,obj.nKeypoints(blockIdx),crop_mask);
+                kp = obj.extractFeatures_(crop,nKeypoints(blockIdx),crop_mask);
                 kp = kp + tl - 1;
                 if obj.plotKeypoints > 0
                     plot(kp(1,:), kp(2,:), 'x');
