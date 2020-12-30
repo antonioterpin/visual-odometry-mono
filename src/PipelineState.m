@@ -288,7 +288,8 @@ classdef PipelineState < handle
                 end
 
                 verboseDisp(state.verbose, ...
-                    '%d points can be triangulated with enough confidence.\n', N);
+                    '%d points can be triangulated with enough confidence at frame %d.\n', ...
+                    [N, fsFrameIdx]);
                 
                 stillCandidatesKp = candidates(:,~valid);
                 stillCandidatesLs = lastSeen(:,~valid);
@@ -324,12 +325,6 @@ classdef PipelineState < handle
                 state.addLandmarksToPose(fsFrameIdx, landmarksIdx, candidates.');
                 state.addLandmarksToPose(lsFrameIdx, landmarksIdx, lastSeen.');
 
-                if state.verbose
-                    N = state.getNumberOfLandmarksTrackedAtFrame(lsFrameIdx);
-                    verboseDisp(state.verbose, ...
-                        'Tracking %d landmarks at frame %d.\n', [N, lsFrameIdx]);
-                end
-
                 % 4. Remove triangulated candidates
                 state.Candidates(idx,:) = [];
                 if ~isempty(stillCandidatesLs)
@@ -338,6 +333,12 @@ classdef PipelineState < handle
                         stillCandidatesKp.', stillCandidatesLs.', ...
                         'VariableNames', {'FirstId', 'Keypoint', 'LastSeen'})];
                 end
+            end
+            
+            if state.verbose
+                N = state.getNumberOfLandmarksTrackedAtFrame(lsFrameIdx);
+                verboseDisp(state.verbose, ...
+                    'Tracking %d landmarks at frame %d.\n', [N, lsFrameIdx]);
             end
         end
         

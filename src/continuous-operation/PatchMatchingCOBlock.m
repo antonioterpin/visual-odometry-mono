@@ -14,7 +14,7 @@ classdef PatchMatchingCOBlock < COBlock
     end
     
     methods (Access = protected)
-        function [trKp, kpMask, newKpc] = track(obj, prevFrameIdx, frameIdx, kp1)
+        function [trKp, kpMask] = track(obj, prevFrameIdx, frameIdx, kp1)
             verboseDisp(obj.verbose, 'Patch matching to localize');
             
             prevI = obj.inputBlock.getImage(prevFrameIdx);
@@ -29,10 +29,6 @@ classdef PatchMatchingCOBlock < COBlock
             
             trKpIdx = matches(matches > 0);
             trKp = trKp(:,trKpIdx);
-            
-            mask = ones(size(trKp, 2), 1);
-            mask(trKpIdx) = 0;
-            newKpc = trKp(:,mask>0);
         end
     end
 end

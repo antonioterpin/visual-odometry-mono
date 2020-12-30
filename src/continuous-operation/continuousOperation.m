@@ -29,4 +29,7 @@ else
         obj.state.evaluateCandidates(K, trackedCandidatesMask, trackedCandidates);
         obj.state.addCandidates(frameIdx, newKpc);
     end
+    
+    % display also new candidates
+    trackedCandidates = [trackedCandidates, newKpc];
 end

@@ -17,15 +17,15 @@ classdef (Abstract) InitBlock < handle
         errorThreshold = 1
         maxDistance = 200
         nCandidates = 100
+        candidatesSuppressionRadius = 10
         
         configurableProps = {'verbose', 'RANSACIt', 'adaptive', ...
             'nSkip', 'nIt', 'errorThreshold', 'maxDistance', ...
-            'stopWithNPoints', 'nKeypoints', 'nCandidates'}
+            'stopWithNPoints', 'nKeypoints', 'nCandidates', 'candidatesSuppressionRadius'}
     end
     
     methods
-        function [keypoints,landmarks,T_2W,secondIndex, candidates, prevFrameKeypoints] ...
-                = run(obj, fromIndex, T_1W)
+        function [kp,P_W,T_2W,frameIdx,kpc,prevKp] = run(obj, fromIndex, T_1W)
         % TODO DOCUMENT
         arguments
           obj InitBlock
@@ -35,13 +35,20 @@ classdef (Abstract) InitBlock < handle
         if size(T_1W,1) == 3
             T_1W = [T_1W; 0 0 0 1];
         end
-        [keypoints,landmarks,T_2W, secondIndex, candidates, prevFrameKeypoints] = obj.run_(fromIndex, T_1W);
+        [kp,P_W,T_2W,frameIdx,prevKp] = obj.run_(fromIndex, T_1W);
+
+        kpc = [];
+        if ~isempty(kp) && nnz(obj.nCandidates) > 0
+            image2 = obj.inputBlock.getImage(frameIdx);
+            mask = obj.detector.getMask(size(image2), floor(kp), obj.candidatesSuppressionRadius);
+            kpc = obj.detector.extractFeatures(image2, obj.nCandidates, mask);
+        end
+        
         end
     end
     
     methods (Abstract, Access = protected)
-        [keypoints,landmarks,T_2W,secondIndex, candidates, prevFrameKeypoints] ...
-            = run_(obj, fromIndex, T_1W)
+        [kp,P_W,T_2W,frameIdx,prevKp] = run_(obj, fromIndex, T_1W)
     end
 end
 

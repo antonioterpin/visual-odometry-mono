@@ -104,6 +104,8 @@ classdef OutputBlock < handle
             idx = max(1, hSize - obj.recentTrajectorySize):hSize;
             
             plot(obj.historyData.FrameId(idx), obj.historyData.nLandmarks(idx), '-k');
+            axis([min(obj.historyData.FrameId(idx)), max(obj.historyData.FrameId(idx)),...
+                0, max(max(obj.historyData.nLandmarks(idx)) + 10,200)]);
             title(sprintf('# tracked landmarks over last %d frames', obj.recentTrajectorySize));
         end
         

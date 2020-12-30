@@ -135,6 +135,7 @@ classdef (Abstract) DetectorBlock < handle
                 suppressionRadius+1:end-suppressionRadius);
             
             if obj.plotMask
+                figure(obj.plotMask);
                 spy(mask);
             end
         end

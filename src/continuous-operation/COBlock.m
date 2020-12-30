@@ -12,9 +12,12 @@ classdef (Abstract) COBlock < handle
         minInliers = 30
         adaptive = 0
         verbose = false
+        candidateSuppressionRadius = 10
+        nNewCandidates = [[25,25,25],[25,25,25]]
         
         configurableProps = { 'p3pRANSACIt', 'p3pTolerance', ...
-            'verbose', 'minInliers', 'adaptive'}
+            'verbose', 'minInliers', 'adaptive', 'nNewCandidates', ...
+            'candidateSuppressionRadius'}
     end
     
     methods
@@ -23,10 +26,7 @@ classdef (Abstract) COBlock < handle
             
             % 1. Keyframe selection & tracking
             nKp = size(kp, 2);
-            [trKpKpc, kpkpcMask, newKpc] = obj.track(prevFrameIdx, frameIdx, [kp, kpc]);
-%             [trKp, kpMask, newKpc] = obj.track(prevFrameIdx, frameIdx, kp);
-%             kpcMask = [];
-%             trKpc = [];
+            [trKpKpc, kpkpcMask] = obj.track(prevFrameIdx, frameIdx, [kp, kpc]);
             
             kpMask = kpkpcMask(1:nKp);
             kpcMask = kpkpcMask(nKp+1:end);
@@ -48,6 +48,13 @@ classdef (Abstract) COBlock < handle
                 % 3. Output
                 kpMask(kpMask > 0) = inliers;
                 trKp = trKp(:,inliers);
+                
+                % Candidate new keypoints
+                image2 = obj.inputBlock.getImage(frameIdx);
+                mask = obj.detector.getMask(...
+                    size(image2), floor([trKp, trKpc]), obj.candidateSuppressionRadius);
+                newKpc = obj.detector.extractFeatures(...
+                    image2, obj.nNewCandidates, mask);
             else
                 kpMask = [];
                 newKpc = [];
@@ -61,7 +68,7 @@ classdef (Abstract) COBlock < handle
     end
     
     methods (Abstract) %Access = protected
-        [trKp, kpMask, newKpc] = track(obj, prevFrameIdx, frameIdx, kp);
+        [trKp, kpMask] = track(obj, prevFrameIdx, frameIdx, kp);
     end
 end
 

@@ -34,7 +34,7 @@ if ~isempty(pose)
     end
 else
     localized = false;
-    prevFrameIdx = obj.state.goToPrevPose();
+    prevFrameIdx = obj.state.gotoPrevPose();
     assert(~isempty(prevFrameIdx), 'Hard reset needed.');
     nFrameProcessed = nFrameProcessed - 1;
 end

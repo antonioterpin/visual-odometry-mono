@@ -7,7 +7,7 @@ classdef PatchMatchingInitBlock < InitBlock
         function [keypoints,landmarks,T_2W,secondIndex, candidates, ...
                 prevFrameKeypoints] = run_(obj, fromIndex, T_1W)
         
-            verboseDisp(obj.verbose, 'Bootstrapping...');
+            verboseDisp(obj.verbose, 'Bootstrapping with Patch Matching...');
             
             image1 = obj.inputBlock.getImage(fromIndex);
             keypoints1 = obj.detector.extractFeatures(image1, obj.nKeypoints);

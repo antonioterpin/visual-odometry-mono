@@ -4,34 +4,47 @@
                 "Path": "data/kitti"
         },
         "InitBlock": {
-                "Handler": "PatchMatching",
+                "Handler": "KLT",
                 "Params" : {
                         "RANSACIt": 2000,
                         "verbose": true,
                         "nIt": 2,
                         "nSkip": 1,
                         "adaptive": 0.99,
-                        "nKeypoints": 1000,
-                        "nCandidates": [[5,10,25,5,25,10,5], 
-                            [5,10,25,5,25,10,5]],
+                        "nKeypoints": [
+                            [25,25,25,25,25], 
+                            [25,25,25,25,25], 
+                            [25,25,25,25,25]], 
+                        "nCandidates": [
+                            [20,20,20,20,20], 
+                            [20,20,20,20,20],
+                            [20,20,20,20,20]],
                         "stopWithNPoints": 150,
                         "errorThreshold": 1,
-                        "maxDistance": 400
+                        "maxDistance": 400,
+                        "candidatesSuppressionRadius":20,
+                        "r_T": 15,
+                        "nItKLT": 100,
+                        "lambda": 2,
+                        "keyframeSelectionConfidence": 0.8
                 }
         },
         "COBlock": {
                 "Handler": "KLT",
                 "Params": {
                         "p3pRANSACIt": 2000,
-                        "p3pTolerance": 2,
+                        "p3pTolerance": 5,
                         "adaptive": 0.99,
                         "minInliers": 5,
                         "verbose": true,
-                        "nNewCandidates":50,
-                        "r_T": 20,
-                        "nIt": 50, 
-                        "lambda": 0.1, 
-                        "candidateSuppressionRadius": 10
+                        "nNewCandidates":[
+                            [5,5,5,5,5], 
+                            [5,5,5,5,5], 
+                            [5,5,5,5,5]], 
+                        "r_T": 15,
+                        "nIt": 100, 
+                        "lambda": 2, 
+                        "candidateSuppressionRadius": 11
                 }
         },
         "OptBlock": {
@@ -41,14 +54,14 @@
                         "plotMap": 3,
                         "plotSparsityPattern": 0,
                         "isActive": true,
-                        "maxBundleSize": 100,
+                        "maxBundleSize": 150,
                         "everyNIterations": 50,
                         "MaxIter": 20
                 }
         },
         "OutputBlock": {
                 "plotGroundTruth": false,
-                "recentTrajectorySize": 20,
+                "recentTrajectorySize": 30,
                 "smooth": false,
                 "color1": "g",
                 "color2": "r"
@@ -58,7 +71,7 @@
                 "Params": {
                         "patchSize": 11,
                         "kappa": 0.08,
-                        "nonMaximaSuppressionRadius": 5,
+                        "nonMaximaSuppressionRadius": 9,
                         "descriptorRadius": 11,
                         "lambda": 3,
                         "plotKeypoints": 0,
@@ -68,10 +81,10 @@
         "Pipeline": {
             "verbose": true,
             "nSkip": 1,
-            "startingFrame": 1,
+            "startingFrame": 80,
             "lastFrame": 120,
             "State": {
-                "lostBelow": 15,
+                "lostBelow": 10,
                 "verbose": true,
                 "cosTh": 2
             },
