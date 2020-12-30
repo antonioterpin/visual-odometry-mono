@@ -91,7 +91,7 @@ classdef OutputBlock < handle
         %     set(gcf, 'GraphicsSmoothing', 'on');
             view(0,90);
             hold off;
-            axis([minX-5, maxX+5, minY-5, maxY+5])
+            axis([minX-0.5, maxX+0.5, minY-0.5, maxY+0.5])
             title(sprintf('Trajectory of last %d frames and landmarks', obj.recentTrajectorySize));
         end
         
