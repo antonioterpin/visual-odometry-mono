@@ -18,11 +18,11 @@ K = (x * y.') / N;
 
 % 4. Rotation matrix
 [U,D,V] = svd(K);
-sign = det(K) >= 0;
+sign = 2 * (det(K) >= 0) - 1;
 S = eye(size(V,1)); 
 S(end,end) = sign;
 
-R_GV = U*S*V.';
+R_GV = U*V.' * det(U*V.');
 
 % 5. Scale
 c = trace(D*S) * (varx + 10^-5).^-1;
