@@ -117,12 +117,10 @@ classdef OutputBlock < handle
             minPosesY = Inf; maxPosesY = -Inf;
             hold off;
             
-            if obj.plotGroundTruth
+            if obj.plotGroundTruth && size(poses, 2) > 7
                 posesGT = obj.historyData.PoseGT.';
                 
-                if size(posesGT, 2) > 7 % n min of points to solve equations
-                    poses = alignEstimateToGroundTruth(posesGT, poses);
-                end
+                poses = alignEstimateToGroundTruth(posesGT, poses);
                 
                 plot(posesGT(1, :), posesGT(3, :), '-ro','MarkerSize', 2)
                 hold on
