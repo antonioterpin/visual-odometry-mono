@@ -26,10 +26,14 @@ else
     
     % Triangulation
     if obj.continuouslyTriangulate
-        obj.state.evaluateCandidates(K, trackedCandidatesMask, trackedCandidates);
+        [confirmedKp, confirmedLandmarks, trackedCandidates] ...
+            = obj.state.evaluateCandidates(K, trackedCandidatesMask, trackedCandidates);
         obj.state.addCandidates(frameIdx, newKpc);
+        
+        trackedKeypoints = [trackedKeypoints, confirmedKp];
+        trackedLandmarks = [trackedLandmarks, confirmedLandmarks];
     end
     
     % display also new candidates
-    trackedCandidates = [trackedCandidates, newKpc];
+	trackedCandidates = [trackedCandidates, newKpc];
 end

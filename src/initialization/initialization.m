@@ -27,6 +27,17 @@ if ~isempty(pose)
     
     trackedKeypoints = trackedKeypoints(:, mask);
     
+    % BA immediately after init
+    % Get optimization data structure
+    [hiddenState, observations, bundleIdx] ...
+        = obj.state.getOptimizationDS(obj.optBlock.maxBundleSize);
+
+    % Start optimization
+    hiddenState = obj.optBlock.optimize(hiddenState, observations);
+
+    % Update state
+    obj.state.optimizedBundle(hiddenState, bundleIdx);
+    
     if ~isempty(trackedCandidates) && obj.continuouslyTriangulate
         % Reset candidates (after init)
         obj.state.resetCandidates();

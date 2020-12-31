@@ -51,7 +51,7 @@ classdef (Abstract) COBlock < handle
                 trKp = trKp(:,inliers);
                 
                 % Candidate new keypoints
-                error = max(0, obj.nLandmarksReference - size(trKp, 2));
+                error = max(0, obj.nLandmarksReference - size(trKpKpc, 2));
                 newKpc = [];
                 if error > 0
                     image2 = obj.inputBlock.getImage(frameIdx);

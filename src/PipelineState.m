@@ -219,7 +219,7 @@ classdef PipelineState < handle
                 'VariableNames', {'FirstId', 'Keypoint', 'LastSeen'});
         end
 
-        function evaluateCandidates(state, K, kpcMask, lastSeen)
+        function [confirmedKp, confirmedLandmarks, stillCandidates] = evaluateCandidates(state, K, kpcMask, lastSeen)
             % EVALUATECANDIDATES Updates the observation graph and the
             % candidates database given the found matches.
             %
@@ -244,6 +244,9 @@ classdef PipelineState < handle
             % the matched candidates.
             
             N = nnz(kpcMask); 
+            confirmedKp = [];
+            confirmedLandmarks = [];
+            stillCandidates = [];
             
             if N == 0
                 state.resetCandidates();
@@ -278,11 +281,24 @@ classdef PipelineState < handle
                 
                 % 1. Validation
                 N = size(candidates, 2);
-                bearings1 = normalize(K \ [candidates; ones(1, N)], 'norm');
-                bearings2 = T_12(1:3,1:3) * normalize(K \ [lastSeen; ones(1, N)], 'norm');
+%                 bearings1 = normalize(K \ [candidates; ones(1, N)], 'norm');
+%                 bearings2 = T_12(1:3,1:3) * normalize(K \ [lastSeen; ones(1, N)], 'norm');
+                P_W = triangulateFromPose(...
+                    [candidates; ones(1, N)], ...
+                    [lastSeen; ones(1, N)], T_21, K, K, T_1W);
                 
-                cosalpha = dot(bearings1, bearings2);
-                valid = cosalpha < state.cosTh;
+                error = reprojectionError(...
+                    P_W(1:3,:), lastSeen(1:2,:), K, T_2W(1:3,1:3), T_2W(1:3,4));
+                
+%                 C1 = -R_1W.'*t_1W;
+%                 C2 = -R_2W.'*t_2W;
+%                 
+%                 bearings1 = normalize(P_W(1:3,:) - C1, 'norm');
+%                 bearings2 = normalize(P_W(1:3,:) - C2, 'norm');
+%                 
+%                 cosalpha = dot(bearings1, bearings2);
+%                 valid = cosalpha < state.cosTh;
+                valid = error < 1;
                 
                 N = nnz(valid);
                 if N == 0
@@ -299,17 +315,18 @@ classdef PipelineState < handle
                 stillCandidatesLs = lastSeen(:,~valid);
                 candidates = candidates(:,valid);
                 lastSeen = lastSeen(:,valid);
+                P_W = P_W(1:3,valid);
                 
                 % 2. Triangulate landmark
                 
-                P_W = triangulateFromPose(...
-                    [candidates; ones(1, N)], ...
-                    [lastSeen; ones(1, N)], T_21, K, K, T_1W);
+%                 P_W = triangulateFromPose(...
+%                     [candidates; ones(1, N)], ...
+%                     [lastSeen; ones(1, N)], T_21, K, K, T_1W);
                 
                 % In front of both cameras
-                isInFront1 = isInFrontOfCamera(P_W(1:3,:), R_1W, t_1W);
-                isInFront2 = isInFrontOfCamera(P_W(1:3,:), R_2W, t_2W);
-                isNear = vecnorm(P_W(1:3,:) + R_2W.' * t_2W,2) < state.maxDistance;
+                isInFront1 = isInFrontOfCamera(P_W, R_1W, t_1W);
+                isInFront2 = isInFrontOfCamera(P_W, R_2W, t_2W);
+                isNear = vecnorm(P_W + R_2W.' * t_2W,2) < state.maxDistance;
                 
                 valid = isInFront1 & isInFront2 & isNear;
                 stillCandidatesKp = [stillCandidatesKp, candidates(:,~valid)];
@@ -320,7 +337,7 @@ classdef PipelineState < handle
                 
                 % TODO reprojection error check
                 
-                [~, landmarksIdx, mask] = addLandmarks(state, P_W(1:3, :));
+                [~, landmarksIdx, mask] = addLandmarks(state, P_W);
                 stillCandidatesKp = [stillCandidatesKp, candidates(:,~mask)];
                 stillCandidatesLs = [stillCandidatesLs, lastSeen(:,~mask)];
                 candidates = candidates(:,mask);
@@ -329,6 +346,10 @@ classdef PipelineState < handle
                 % 3. Add observation
                 state.addLandmarksToPose(fsFrameIdx, landmarksIdx, candidates.');
                 state.addLandmarksToPose(lsFrameIdx, landmarksIdx, lastSeen.');
+                
+                confirmedKp = lastSeen;
+                confirmedLandmarks = P_W;
+                stillCandidates = stillCandidatesLs;
 
                 % 4. Remove triangulated candidates
                 state.Candidates(idx,:) = [];
