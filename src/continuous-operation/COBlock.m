@@ -14,10 +14,11 @@ classdef (Abstract) COBlock < handle
         verbose = false
         candidateSuppressionRadius = 10
         nLandmarksReference = 200
+        samplingSize = [3,3]
         
         configurableProps = { 'p3pRANSACIt', 'p3pTolerance', ...
             'verbose', 'minInliers', 'adaptive', 'nLandmarksReference', ...
-            'candidateSuppressionRadius'}
+            'candidateSuppressionRadius', 'samplingSize'}
     end
     
     methods
@@ -57,7 +58,9 @@ classdef (Abstract) COBlock < handle
                     mask = obj.detector.getMask(...
                         size(image2), floor([trKp, trKpc]), obj.candidateSuppressionRadius);
 
-                    newCandidates = repmat(floor(error/15),3,5);
+                    newCandidates = repmat(...
+                        floor(error / prod(obj.samplingSize)),...
+                        reshape(obj.samplingSize, 1, 2));
                     newKpc = obj.detector.extractFeatures(...
                         image2, newCandidates, mask);
                 end

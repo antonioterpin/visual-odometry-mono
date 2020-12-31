@@ -10,21 +10,21 @@ classdef PipelineState < handle
         ObservationGraph = graph % Poses x Landmarks -> (keypoints)
         Candidates
 %         K % The intrinsics matrix
-        lastLandmark = 0;
-        lost = true;
-        descriptorSize = 0;
+        lastLandmark = 0
+        lost = true
+        descriptorSize = 0
+        
+        lostBelow = 20
+        verbose = true
+        cosTh = 0.1 % Threshold for triangulation
+        maxDistance = 100
+        candidateWindow = 10
     end
     
     % Config params
     properties (Constant)
         configurableProps = {'lostBelow', 'verbose', ...
-            'cosTh', 'maxDistance'}
-    end
-    properties
-        lostBelow = 20
-        verbose = true
-        cosTh = 0.1 % Threshold for triangulation
-        maxDistance = 100
+            'cosTh', 'maxDistance', 'candidateWindow'}
     end
     
     methods
@@ -338,6 +338,10 @@ classdef PipelineState < handle
                         stillCandidatesKp.', stillCandidatesLs.', ...
                         'VariableNames', {'FirstId', 'Keypoint', 'LastSeen'})];
                 end
+                
+                % Remove all candidates from frames too far away
+                state.Candidates(...
+                    state.Candidates.FirstId < lsFrameIdx - state.candidateWindow, :) = [];
             end
             
             if state.verbose

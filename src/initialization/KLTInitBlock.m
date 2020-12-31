@@ -32,6 +32,9 @@ classdef KLTInitBlock < InitBlock
         T_2W = [];
         frameIdx = fromIdx + obj.nSkip;
         prevKp = [];
+        keep = [];
+        keypoints = [];
+        kpold = [];
         
         for it = fromIdx + obj.nSkip : fromIdx + obj.nSkip * obj.nIt
             verboseDisp(obj.verbose, ...
@@ -39,15 +42,18 @@ classdef KLTInitBlock < InitBlock
             
             image2 = obj.inputBlock.getImage(it);
                 
-            [keypoints,keep] = KLT(image1,image2,kp1,obj.r_T,obj.nItKLT,obj.lambda);
-            kpold = kp1(:,keep);
+            [keypoints_,keep_] = KLT(image1,image2,kp1,obj.r_T,obj.nItKLT,obj.lambda);
+            kpold_ = kp1(:,keep_);
             verboseDisp(obj.verbose, ...
-                'Confidence: %.3f\n', nnz(keep) / numel(keep));
+                'Confidence: %.3f\n', nnz(keep_) / numel(keep_));
             
-            if nnz(keep) / numel(keep) < obj.keyframeSelectionConfidence
+            if ~isempty(keep) && nnz(keep_) / numel(keep_) < obj.keyframeSelectionConfidence
                 break;
             end
             
+            kpold = kpold_;
+            keypoints = keypoints_;
+            keep = keep_;
             frameIdx = it;
         end
             

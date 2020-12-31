@@ -11,33 +11,31 @@
                         "nIt": 3,
                         "nSkip": 1,
                         "adaptive": 0.99,
-                        "nKeypoints": [
-                            [10,10,10,10,10], 
-                            [10,10,10,10,10], 
-                            [10,10,10,10,10]], 
+                        "nKeypoints": [[25,25,25],[25,25,25],[25,25,25]], 
                         "nCandidates": 0,
                         "stopWithNPoints": 150,
-                        "errorThreshold": 3,
+                        "errorThreshold": 1,
                         "maxDistance": 100,
                         "candidatesSuppressionRadius":20,
-                        "r_T": 10,
+                        "r_T": 15,
                         "nItKLT": 75,
-                        "lambda": 1,
-                        "keyframeSelectionConfidence": 0.95
+                        "lambda": 7,
+                        "keyframeSelectionConfidence": 0.8
                 }
         },
         "COBlock": {
                 "Handler": "KLT",
                 "Params": {
                         "p3pRANSACIt": 2000,
-                        "p3pTolerance": 3,
+                        "p3pTolerance": 1,
                         "adaptive": 0.99,
                         "minInliers": 5,
                         "verbose": true,
-                        "nLandmarksReference":0, 
-                        "r_T": 10,
+                        "nLandmarksReference": 100, 
+                        "samplingSize": [3,3],
+                        "r_T": 15,
                         "nIt": 75, 
-                        "lambda": 1, 
+                        "lambda": 7, 
                         "candidateSuppressionRadius": 15
                 }
         },
@@ -49,7 +47,7 @@
                         "plotSparsityPattern": 0,
                         "isActive": true,
                         "maxBundleSize": 150,
-                        "everyNIterations": 3,
+                        "everyNIterations": 50,
                         "MaxIter": 150
                 }
         },
@@ -65,7 +63,7 @@
                 "Params": {
                         "patchSize": 11,
                         "kappa": 0.08,
-                        "nonMaximaSuppressionRadius": 9,
+                        "nonMaximaSuppressionRadius": 15,
                         "descriptorRadius": 11,
                         "lambda": 3,
                         "plotKeypoints": 0,
@@ -76,12 +74,13 @@
             "verbose": true,
             "nSkip": 1,
             "startingFrame": 1,
-            "lastFrame": 350,
+            "lastFrame": 2000,
             "State": {
                 "lostBelow": 10,
                 "verbose": true,
-                "cosTh": 0,
-                "maxDistance": 100
+                "cosTh": 2,
+                "maxDistance": 100,
+                "candidateWindow": 1
             },
             "continuouslyTriangulate": true
         }
