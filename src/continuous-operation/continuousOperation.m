@@ -10,9 +10,35 @@ if obj.continuouslyTriangulate
     candidates = obj.state.getCandidates();
 end
 
-% TODO: is keyframe selection + plotting candidates possible without changing everything?
-[R_CW, t_CW, trackedKeypoints, kpMask, trackedCandidates, trackedCandidatesMask, newKpc] ...
-    = obj.coBlock.localize(prevFrameIdx, frameIdx, kp, landmarks, candidates);
+[R_CW, t_CW, trackedKeypoints, kpMask, ...
+    trackedCandidates, trackedCandidatesMask, newKpc] ...
+        = obj.coBlock.localize(prevFrameIdx, frameIdx, kp, landmarks, candidates);
+
+% Keyframe selection
+while nnz(kpMask) / numel(kpMask) > obj.coBlock.keyframeConfidence ...
+        && ~isempty(R_CW) && ~isempty(t_CW)
+    verboseDisp(obj.verbose, ...
+        'Considering frame %d as keyframe.\n', frameIdx);
+    [R_CW_, t_CW_, trackedKeypoints_, kpMask_, ...
+        trackedCandidates_, trackedCandidatesMask_, newKpc_] ...
+            = obj.coBlock.localize(frameIdx, frameIdx+obj.nSkip, ...
+                trackedKeypoints, landmarks(:,kpMask), trackedCandidates);
+            
+    if nnz(kpMask_) / numel(kpMask_) > obj.coBlock.keyframeConfidence...
+            && ~isempty(R_CW_) && ~isempty(t_CW_)
+        R_CW = R_CW_;
+        t_CW = t_CW_;
+        trackedKeypoints = trackedKeypoints_;
+        kpMask(kpMask > 0) = kpMask_;
+        trackedCandidates = trackedCandidates_;
+        trackedCandidatesMask(trackedCandidatesMask > 0) = trackedCandidatesMask_;
+        newKpc = newKpc_;
+        frameIdx = frameIdx+obj.nSkip;
+    end
+end
+
+verboseDisp(obj.verbose, ...
+        'Next keyframe is %d.\n', frameIdx);
 
 if isempty(R_CW) || isempty(t_CW)
     localized = false;

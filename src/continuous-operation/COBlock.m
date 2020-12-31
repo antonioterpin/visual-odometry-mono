@@ -15,10 +15,11 @@ classdef (Abstract) COBlock < handle
         candidateSuppressionRadius = 10
         nLandmarksReference = 200
         samplingSize = [3,3]
+        keyframeConfidence = 0.8
         
         configurableProps = { 'p3pRANSACIt', 'p3pTolerance', ...
             'verbose', 'minInliers', 'adaptive', 'nLandmarksReference', ...
-            'candidateSuppressionRadius', 'samplingSize'}
+            'candidateSuppressionRadius', 'samplingSize', 'keyframeConfidence'}
     end
     
     methods

@@ -5,13 +5,13 @@ classdef KLTInitBlock < InitBlock
         r_T = 20
         nItKLT = 50
         lambda = 0.1
-        keyframeSelectionConfidence = 0.8
+        keyframeConfidence = 0.8
     end
     
     methods
         function obj = KLTInitBlock()
             obj.configurableProps = [obj.configurableProps, ...
-                'r_T', 'nItKLT', 'lambda', 'keyframeSelectionConfidence'];
+                'r_T', 'nItKLT', 'lambda', 'keyframeConfidence'];
         end
     end
     
@@ -47,7 +47,7 @@ classdef KLTInitBlock < InitBlock
             verboseDisp(obj.verbose, ...
                 'Confidence: %.3f\n', nnz(keep_) / numel(keep_));
             
-            if ~isempty(keep) && nnz(keep_) / numel(keep_) < obj.keyframeSelectionConfidence
+            if ~isempty(keep) && nnz(keep_) / numel(keep_) < obj.keyframeConfidence
                 break;
             end
             
