@@ -14,7 +14,11 @@ y = pp_GC - q;
 varx = sum(mean(x.^2, 2));
 
 % 3. Covariance matrix
-K = (x * y.') / N;
+K = zeros(3,3);
+for i = 1:N
+    K = K + y(:,i) * x(:,i).';
+end
+K = K / N;
 
 % 4. Rotation matrix
 [U,D,V] = svd(K);
@@ -22,7 +26,7 @@ sign = 2 * (det(K) >= 0) - 1;
 S = eye(size(V,1)); 
 S(end,end) = sign;
 
-R_GV = U*V.' * det(U*V.');
+R_GV = U*S*V.';
 
 % 5. Scale
 c = trace(D*S) * (varx + 10^-5).^-1;
