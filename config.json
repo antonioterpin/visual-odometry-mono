@@ -21,7 +21,7 @@
                         "stopWithNPoints": 150,
                         "errorThreshold": 3,
                         "maxDistance": 200,
-                        "r_T": 21,
+                        "r_T": 31,
                         "nItKLT": 50,
                         "lambda": 1,
                         "keyframeConfidence": 0.8
@@ -31,16 +31,16 @@
                 "Handler": "KLT",
                 "Params": {
                         "p3pRANSACIt": 2000,
-                        "p3pTolerance": 3,
+                        "p3pTolerance": 6,
                         "adaptive": 0.99,
                         "minInliers": 10,
                         "verbose": true,
                         "nLandmarksReference": 600, 
-                        "samplingSize": [5,5],
-                        "candidateSuppressionRadius": 10,
-                        "r_T": 21,
-                        "nIt": 50, 
-                        "lambda": 1, 
+                        "samplingSize": [7,7],
+                        "candidateSuppressionRadius": 5,
+                        "r_T": 31,
+                        "nIt": 40, 
+                        "lambda": 2.5, 
                         "keyframeConfidence": 0.8,
                         "keyframeMaxSkip": 3
                 }
@@ -51,9 +51,9 @@
                         "verbose": true,
                         "plotMap": 3,
                         "plotSparsityPattern": 0,
-                        "isActive": true,
-                        "maxBundleSize": 50,
-                        "everyNIterations": 10,
+                        "isActive": false,
+                        "maxBundleSize": 100,
+                        "everyNIterations": 20,
                         "MaxIter": 20
                 }
         },
@@ -87,6 +87,6 @@
                 "alphaTh": 1,
                 "maxDistance": 300
             },
-            "continuouslyTriangulate": false
+            "continuouslyTriangulate": true
         }
 }

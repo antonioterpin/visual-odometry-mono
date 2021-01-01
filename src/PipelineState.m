@@ -18,6 +18,7 @@ classdef PipelineState < handle
         verbose = true
         alphaTh = 2 % Threshold for triangulation
         maxDistance = 100
+        minDistance = 6.5
     end
     
     % Config params
@@ -327,8 +328,9 @@ classdef PipelineState < handle
                 isInFront1 = isInFrontOfCamera(P_W, R_1W, t_1W);
                 isInFront2 = isInFrontOfCamera(P_W, R_2W, t_2W);
                 isNear = vecnorm(P_W + R_2W.' * t_2W,2) < state.maxDistance;
+                isFarEnough = vecnorm(P_W + R_2W.' * t_2W,2) > state.minDistance;   %ADDED minimum distance 01/01
                 
-                valid = isInFront1 & isInFront2 & isNear;
+                valid = isInFront1 & isInFront2 & isNear & isFarEnough;
                 stillCandidatesKp = [stillCandidatesKp, candidates(:,~valid)];
                 stillCandidatesLs = [stillCandidatesLs, lastSeen(:,~valid)];
                 candidates = candidates(:,valid);
