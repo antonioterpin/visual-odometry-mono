@@ -260,6 +260,8 @@ classdef PipelineState < handle
             [R_2W, t_2W] = state.getLastPose(); % last seen pose
             lsFrameIdx = state.Poses.Id(end); % last seen
             
+            confirmedKp = [];
+            confirmedLandmarks = [];
             for fsFrameIdx = unique(state.Candidates.FirstId).'
                 if fsFrameIdx == lsFrameIdx
                     continue;
@@ -347,8 +349,8 @@ classdef PipelineState < handle
                 state.addLandmarksToPose(fsFrameIdx, landmarksIdx, candidates.');
                 state.addLandmarksToPose(lsFrameIdx, landmarksIdx, lastSeen.');
                 
-                confirmedKp = lastSeen;
-                confirmedLandmarks = P_W;
+                confirmedKp = [confirmedKp, lastSeen];
+                confirmedLandmarks = [confirmedLandmarks, P_W];
                 stillCandidates = stillCandidatesLs;
 
                 % 4. Remove triangulated candidates
