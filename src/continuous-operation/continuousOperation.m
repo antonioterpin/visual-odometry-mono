@@ -12,15 +12,17 @@ end
 
 trackedKeypoints = kp;
 kpMask = true(size(kp,2),1);
+trackedCandidatesMask = true(size(trackedCandidates,2), 1);
 trackedLandmarks = landmarks;
 N = numel(kpMask);
 for it = frameIdx:frameIdx+obj.coBlock.keyframeMaxSkip
-    [R_CW, t_CW, trackedKeypoints, kpMask, trackedCandidates, trackedCandidatesMask] ...
+    [R_CW, t_CW, trackedKeypoints, kpMask, trackedCandidates, trackedCandidatesMask_] ...
         = obj.coBlock.localize(prevFrameIdx, it, ...
         trackedKeypoints, trackedLandmarks, trackedCandidates, tracker);
     
     landmarksIdx = landmarksIdx(kpMask);
     trackedLandmarks = trackedLandmarks(:, kpMask);
+    trackedCandidatesMask(trackedCandidatesMask) = trackedCandidatesMask_;
     
     if nnz(kpMask) / N < obj.coBlock.keyframeConfidence
         break;

@@ -12,9 +12,9 @@
                         "nSkip": 1,
                         "adaptive": 0.95,
                         "nKeypoints": [
-                            [100,100,100,100], 
-                            [100,100,100,100],
-                            [100,100,100,100]],
+                            [75,75,75,75], 
+                            [75,75,75,75],
+                            [75,75,75,75]],
                         "nLandmarksReference": 200, 
                         "samplingSize": [3,5],
                         "candidateSuppressionRadius": 10,
