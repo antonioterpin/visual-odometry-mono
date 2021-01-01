@@ -1,7 +1,7 @@
 {
         "InputBlock": {
-                "Handler": "Malaga",
-                "Path": "data/malaga"
+                "Handler": "Kitti",
+                "Path": "data/kitti"
         },
         "InitBlock": {
                 "Handler": "KLT",
@@ -10,33 +10,35 @@
                         "verbose": true,
                         "nIt": 3,
                         "nSkip": 1,
-                        "adaptive": 0.99,
+                        "adaptive": 0.95,
                         "nKeypoints": [[25,25,25],[25,25,25],[25,25,25]], 
-                        "nCandidates": 0,
+                        "nLandmarksReference": 400, 
+                        "samplingSize": [3,5],
+                        "candidateSuppressionRadius": 20,
                         "stopWithNPoints": 150,
-                        "errorThreshold": 1,
-                        "maxDistance": 100,
-                        "candidatesSuppressionRadius":20,
+                        "errorThreshold": 10,
+                        "maxDistance": 200,
                         "r_T": 15,
                         "nItKLT": 75,
-                        "lambda": 7,
-                        "keyframeSelectionConfidence": 0.8
+                        "lambda": 1,
+                        "keyframeConfidence": 0.7
                 }
         },
         "COBlock": {
                 "Handler": "KLT",
                 "Params": {
                         "p3pRANSACIt": 2000,
-                        "p3pTolerance": 1,
+                        "p3pTolerance": 10,
                         "adaptive": 0.99,
                         "minInliers": 5,
                         "verbose": true,
-                        "nLandmarksReference": 100, 
-                        "samplingSize": [3,3],
+                        "nLandmarksReference": 400, 
+                        "samplingSize": [3,5],
+                        "candidateSuppressionRadius": 20,
                         "r_T": 15,
                         "nIt": 75, 
-                        "lambda": 7, 
-                        "candidateSuppressionRadius": 15
+                        "lambda": 25, 
+                        "keyframeConfidence": 0.95
                 }
         },
         "OptBlock": {
@@ -45,10 +47,10 @@
                         "verbose": true,
                         "plotMap": 3,
                         "plotSparsityPattern": 0,
-                        "isActive": true,
+                        "isActive": false,
                         "maxBundleSize": 150,
-                        "everyNIterations": 50,
-                        "MaxIter": 150
+                        "everyNIterations": 75,
+                        "MaxIter": 20
                 }
         },
         "OutputBlock": {
@@ -78,9 +80,9 @@
             "State": {
                 "lostBelow": 10,
                 "verbose": true,
-                "cosTh": 2,
+                "cosTh": 0.99,
                 "maxDistance": 100,
-                "candidateWindow": 1
+                "candidateWindow": 3
             },
             "continuouslyTriangulate": true
         }

@@ -16,16 +16,18 @@ classdef (Abstract) InitBlock < handle
         stopWithNPoints = 90
         errorThreshold = 1
         maxDistance = 200
-        nCandidates = 100
-        candidatesSuppressionRadius = 10
+        candidateSuppressionRadius = 10
+        nLandmarksReference = 200
+        samplingSize = [3,3]
         
         configurableProps = {'verbose', 'RANSACIt', 'adaptive', ...
             'nSkip', 'nIt', 'errorThreshold', 'maxDistance', ...
-            'stopWithNPoints', 'nKeypoints', 'nCandidates', 'candidatesSuppressionRadius'}
+            'stopWithNPoints', 'nKeypoints', 'nLandmarksReference', ...
+            'candidateSuppressionRadius', 'samplingSize', 'candidatesSuppressionRadius'}
     end
     
     methods
-        function [kp,P_W,T_2W,frameIdx,kpc,prevKp] = run(obj, fromIndex, T_1W)
+        function [kp,P_W,T_2W,frameIdx,kpc,prevKp,tracker] = run(obj, fromIndex, T_1W)
         % TODO DOCUMENT
         arguments
           obj InitBlock
@@ -35,20 +37,31 @@ classdef (Abstract) InitBlock < handle
         if size(T_1W,1) == 3
             T_1W = [T_1W; 0 0 0 1];
         end
-        [kp,P_W,T_2W,frameIdx,prevKp] = obj.run_(fromIndex, T_1W);
+        [kp,P_W,T_2W,frameIdx,prevKp,tracker] = obj.run_(fromIndex, T_1W);
 
         kpc = [];
-        if ~isempty(kp) && nnz(obj.nCandidates) > 0
-            image2 = obj.inputBlock.getImage(frameIdx);
-            mask = obj.detector.getMask(size(image2), floor(kp), obj.candidatesSuppressionRadius);
-            kpc = obj.detector.extractFeatures(image2, obj.nCandidates, mask);
+        if ~isempty(kp)
+            % Candidate new keypoints
+            error = max(0, obj.nLandmarksReference - size(kp, 2));
+            kpc = [];
+            if error > 0
+                image2 = obj.inputBlock.getImage(frameIdx);
+                mask = obj.detector.getMask(size(image2), floor(kp),...
+                    obj.candidateSuppressionRadius);
+
+                newCandidates = repmat(...
+                    floor(error / prod(obj.samplingSize)),...
+                    reshape(obj.samplingSize, 1, 2));
+                kpc = obj.detector.extractFeatures(...
+                    image2, newCandidates, mask);
+            end
         end
         
         end
     end
     
     methods (Abstract, Access = protected)
-        [kp,P_W,T_2W,frameIdx,prevKp] = run_(obj, fromIndex, T_1W)
+        [kp,P_W,T_2W,frameIdx,prevKp,tracker] = run_(obj, fromIndex, T_1W)
     end
 end
 

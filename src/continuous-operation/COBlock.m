@@ -24,7 +24,7 @@ classdef (Abstract) COBlock < handle
     
     methods
         function [R_CW, t_CW, trKp, kpMask, trKpc, kpcMask, newKpc] = ...
-                localize(obj, prevFrameIdx, frameIdx, kp, P_W, kpc)
+                localize(obj, prevFrameIdx, frameIdx, kp, P_W, kpc, tracker)
             
             % 1. Keyframe selection & tracking
             nKp = size(kp, 2);
@@ -41,7 +41,7 @@ classdef (Abstract) COBlock < handle
                 [size(trKp,2), size(trKpc,2)]);
             
             % 2. Localization
-            if size(trKp, 2) >= obj.minInliers
+            if nnz(kpMask) >= obj.minInliers
                [R_CW, t_CW, inliers] = p3pRANSAC(...
                     trKp, P_W(:,kpMask), obj.K, ...
                     obj.p3pRANSACIt, obj.p3pTolerance, ...
@@ -78,7 +78,7 @@ classdef (Abstract) COBlock < handle
     end
     
     methods (Abstract) %Access = protected
-        [trKp, kpMask] = track(obj, prevFrameIdx, frameIdx, kp);
+        [trKp, kpMask] = track(obj, prevFrameIdx, frameIdx, kp, tracker);
     end
 end
 

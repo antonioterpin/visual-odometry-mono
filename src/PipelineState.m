@@ -292,15 +292,16 @@ classdef PipelineState < handle
                 error = reprojectionError(...
                     P_W(1:3,:), lastSeen(1:2,:), K, T_2W(1:3,1:3), T_2W(1:3,4));
                 
-%                 C1 = -R_1W.'*t_1W;
-%                 C2 = -R_2W.'*t_2W;
-%                 
-%                 bearings1 = normalize(P_W(1:3,:) - C1, 'norm');
-%                 bearings2 = normalize(P_W(1:3,:) - C2, 'norm');
-%                 
-%                 cosalpha = dot(bearings1, bearings2);
-%                 valid = cosalpha < state.cosTh;
-                valid = error < 1;
+                C1 = -R_1W.'*t_1W;
+                C2 = -R_2W.'*t_2W;
+                
+                bearings1 = normalize(P_W(1:3,:) - C1, 'norm');
+                bearings2 = normalize(P_W(1:3,:) - C2, 'norm');
+                
+                cosalpha = dot(bearings1, bearings2);
+                valid = cosalpha < state.cosTh;
+                min(cosalpha)
+                valid = error < 10;
                 
                 N = nnz(valid);
                 if N == 0

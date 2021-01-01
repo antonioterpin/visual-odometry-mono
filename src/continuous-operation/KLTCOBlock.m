@@ -23,7 +23,13 @@ classdef KLTCOBlock < COBlock
             image1 = obj.inputBlock.getImage(prevFrameIdx);
             image2 = obj.inputBlock.getImage(frameIdx);
             
-            [trKp,kpMask] = KLT(image1,image2,kp1,obj.r_T,obj.nIt,obj.lambda);
+%             [trKp,kpMask] = KLT(image1,image2,kp1,obj.r_T,obj.nIt,obj.lambda);
+
+            tracker = vision.PointTracker('MaxBidirectionalError',obj.lambda);
+            initialize(tracker,kp1.',image1);
+            [trKp,kpMask] = tracker(image2);
+            release(tracker);
+            trKp = trKp(kpMask,:).';
         end
     end
 end
