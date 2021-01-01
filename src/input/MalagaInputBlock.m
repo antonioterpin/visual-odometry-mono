@@ -67,6 +67,7 @@ classdef MalagaInputBlock < InputBlock
                 obj.discretizedPosesMalaga = [xyInterp(1, :);
                                             zeros(1, size(xyInterp, 2));
                                             xyInterp(2, :)];
+                fclose(fid);
             end
             
             translation = obj.discretizedPosesMalaga(:, poseIndex);

@@ -44,6 +44,7 @@ classdef ParkingInputBlock < InputBlock
                 tmpPose(5:7)';
                 tmpPose(9:11)'];
             pose = translation;
+            fclose(fid);
         end
 
     end
