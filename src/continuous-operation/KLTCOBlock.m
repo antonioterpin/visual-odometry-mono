@@ -20,12 +20,10 @@ classdef KLTCOBlock < COBlock
             verboseDisp(obj.verbose, 'KLT to localize');
 
             % Get images
-%             image1 = obj.inputBlock.getImage(prevFrameIdx);
             image2 = obj.inputBlock.getImage(frameIdx);
-            
             tracker.setPoints(kp1.');
+
             [trKp,kpMask] = tracker(image2);
-%             release(tracker);
             trKp = trKp(kpMask,:).';
         end
     end

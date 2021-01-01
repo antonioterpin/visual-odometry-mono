@@ -5,16 +5,24 @@ verboseDisp(obj.verbose, ...
 [landmarks, landmarksIdx, kp] ...
     = obj.state.getObservations(prevFrameIdx);
 
-candidates = [];
+trackedCandidates = [];
 if obj.continuouslyTriangulate
-    candidates = obj.state.getCandidates();
+    trackedCandidates = obj.state.getCandidates();
 end
 
+trackedKeypoints = kp;
+kpMask = true(size(kp,2),1);
+trackedLandmarks = landmarks;
+N = numel(kpMask);
 for it = frameIdx:frameIdx+obj.coBlock.keyframeMaxSkip
     [R_CW, t_CW, trackedKeypoints, kpMask, trackedCandidates, trackedCandidatesMask] ...
-        = obj.coBlock.localize(prevFrameIdx, frameIdx, kp, landmarks, candidates, tracker);
+        = obj.coBlock.localize(prevFrameIdx, it, ...
+        trackedKeypoints, trackedLandmarks, trackedCandidates, tracker);
     
-    if nnz(kpMask) / numel(kpMask) < obj.coBlock.keyframeConfidence
+    landmarksIdx = landmarksIdx(kpMask);
+    trackedLandmarks = trackedLandmarks(:, kpMask);
+    
+    if nnz(kpMask) / N < obj.coBlock.keyframeConfidence
         break;
     end
 end
@@ -28,30 +36,28 @@ if isempty(R_CW) || isempty(t_CW)
 else
     localized = true;
     
-    % Candidate new keypoints
-    error = max(0, obj.coBlock.nLandmarksReference - size(trackedKeypoints, 2) - size(trackedCandidates,2));
-    newKpc = [];
-    if error > 0
-        image2 = obj.inputBlock.getImage(frameIdx);
-        mask = obj.coBlock.detector.getMask(...
-            size(image2), floor([trackedKeypoints, trackedCandidates]), ...
-            obj.coBlock.candidateSuppressionRadius);
-
-        newCandidates = repmat(...
-            floor(error / prod(obj.coBlock.samplingSize)),...
-            reshape(obj.coBlock.samplingSize, 1, 2));
-        newKpc = obj.coBlock.detector.extractFeatures(...
-            image2, newCandidates, mask);
-    end
-    
     % Update state
-    landmarksIdx = landmarksIdx(kpMask);
-    trackedLandmarks = landmarks(:, kpMask);
     obj.state.addPose(frameIdx, R_CW, t_CW);
     obj.state.addLandmarksToPose(frameIdx, landmarksIdx, trackedKeypoints.');
     
     % Triangulation
     if obj.continuouslyTriangulate
+        % Candidate new keypoints
+        error = max(0, obj.coBlock.nLandmarksReference - size(trackedKeypoints, 2) - size(trackedCandidates,2));
+        newKpc = [];
+        if error > 0
+            image2 = obj.inputBlock.getImage(frameIdx);
+            mask = obj.coBlock.detector.getMask(...
+                size(image2), floor([trackedKeypoints, trackedCandidates]), ...
+                obj.coBlock.candidateSuppressionRadius);
+
+            newCandidates = repmat(...
+                floor(error / prod(obj.coBlock.samplingSize)),...
+                reshape(obj.coBlock.samplingSize, 1, 2));
+            newKpc = obj.coBlock.detector.extractFeatures(...
+                image2, newCandidates, mask);
+        end
+        
         [confirmedKp, confirmedLandmarks, trackedCandidates] ...
             = obj.state.evaluateCandidates(K, trackedCandidatesMask, trackedCandidates);
         
@@ -59,8 +65,7 @@ else
         
         trackedKeypoints = [trackedKeypoints, confirmedKp];
         trackedLandmarks = [trackedLandmarks, confirmedLandmarks];
+        % display also new candidates
+        trackedCandidates = [trackedCandidates, newKpc];
     end
-    
-    % display also new candidates
-	trackedCandidates = [trackedCandidates, newKpc];
 end
