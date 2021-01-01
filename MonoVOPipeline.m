@@ -44,32 +44,25 @@ function obj = MonoVOPipeline(configuration)
     end
 end
 
-function run(obj, state)
+function run(obj)
     arguments
         obj MonoVOPipeline
-        state = [] % Optional, to resume pipeline run, with starting frame
     end
     
-    if isempty(state)
-        % Run from the beginning
-        obj.state.addPose(obj.startingFrame, eye(3), zeros(3,1));
-    else
-        obj.state = state;
-    end
-    
+    obj.state.addPose(obj.startingFrame, eye(3), zeros(3,1));
     obj.outBlock.state = obj.state; % sync output with pipeline
+    obj.outBlock.addHistoryEntry(obj.startingFrame, []);
     
     K = obj.inputBlock.getIntrinsics();
     
     prevFrameIdx = obj.startingFrame;
-    obj.outBlock.addHistoryEntry(prevFrameIdx, []);
-    nFrameProcessed = 0;
     while prevFrameIdx < min(obj.inputBlock.getNumberOfImages(), obj.lastFrame)
         
         % If we are tracking to fre keypoints, we re-initialize
         if obj.state.isLost()
             initialization;
         else
+            prevFrameIdx = frameIdx;
             frameIdx = prevFrameIdx + obj.nSkip;
             continuousOperation;
         end
@@ -81,15 +74,10 @@ function run(obj, state)
             % Plot
             figure(1);
             obj.outBlock.plot(frameIdx, trackedKeypoints, trackedCandidates, trackedLandmarks)
-%             figure(2);
-%             plot(obj.state.ObservationGraph)
-            
-            nFrameProcessed = nFrameProcessed + 1;
-            prevFrameIdx = frameIdx;
             
             % Eventually bundle adjust
             if obj.optBlock.isActive ...
-                    && mod(nFrameProcessed, obj.optBlock.everyNIterations) == 0
+                    && mod(frameIdx - obj.startingFrame, obj.optBlock.everyNIterations) == 0
                 % Get optimization data structure
                 [hiddenState, observations, bundleIdx] ...
                     = obj.state.getOptimizationDS(obj.optBlock.maxBundleSize);

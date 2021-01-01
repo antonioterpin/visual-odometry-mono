@@ -25,7 +25,7 @@ classdef (Abstract) COBlock < handle
     end
     
     methods
-        function [R_CW, t_CW, trKp, kpMask, trKpc, kpcMask, newKpc] = ...
+        function [R_CW, t_CW, trKp, kpMask, trKpc, kpcMask] = ...
                 localize(obj, prevFrameIdx, frameIdx, kp, P_W, kpc, tracker)
             
             % 1. Keyframe selection & tracking
@@ -52,24 +52,8 @@ classdef (Abstract) COBlock < handle
                 % 3. Output
                 kpMask(kpMask > 0) = inliers;
                 trKp = trKp(:,inliers);
-                
-                % Candidate new keypoints
-                error = max(0, obj.nLandmarksReference - size(trKpKpc, 2));
-                newKpc = [];
-                if error > 0
-                    image2 = obj.inputBlock.getImage(frameIdx);
-                    mask = obj.detector.getMask(...
-                        size(image2), floor([trKp, trKpc]), obj.candidateSuppressionRadius);
-
-                    newCandidates = repmat(...
-                        floor(error / prod(obj.samplingSize)),...
-                        reshape(obj.samplingSize, 1, 2));
-                    newKpc = obj.detector.extractFeatures(...
-                        image2, newCandidates, mask);
-                end
             else
                 kpMask = [];
-                newKpc = [];
                 trKp = [];
                 R_CW = []; 
                 t_CW = [];

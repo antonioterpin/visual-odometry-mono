@@ -13,7 +13,7 @@ classdef (Abstract) OptimizationBlock < handle
         plotMap = 5
         plotSparsityPattern = 6
         configurableProps = {'verbose', 'MaxIter', 'isActive', ...
-            'everyNIterations', 'maxBundleSize', 'plotMap'}
+            'everyNIterations', 'maxBundleSize', 'plotMap', 'plotSparsityPattern'}
     end
     
     methods
@@ -42,7 +42,7 @@ classdef (Abstract) OptimizationBlock < handle
                 title('Problem after bundle adjustment');
             end
             
-            if obj.plotSparsityPattern
+            if obj.plotSparsityPattern > 0
                 figure(obj.plotSparsityPattern);
                 spy(J); 
             end
@@ -79,4 +79,3 @@ classdef (Abstract) OptimizationBlock < handle
         options = setOptions(obj, options)
     end
 end
-

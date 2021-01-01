@@ -16,23 +16,14 @@ classdef KLTCOBlock < COBlock
     end
     
     methods %(Access = protected)
-        function [trKp, kpMask] = track(obj, prevFrameIdx, frameIdx, kp1, tracker)
+        function [trKp, kpMask] = track(obj, ~, frameIdx, kp1, tracker)
             verboseDisp(obj.verbose, 'KLT to localize');
 
             % Get images
-            image1 = obj.inputBlock.getImage(prevFrameIdx);
+%             image1 = obj.inputBlock.getImage(prevFrameIdx);
             image2 = obj.inputBlock.getImage(frameIdx);
             
-%             [trKp,kpMask] = KLT(image1,image2,kp1,obj.r_T,obj.nIt,obj.lambda);
-
-            release(tracker);
-            tracker = vision.PointTracker(...
-                'MaxBidirectionalError',obj.lambda, ...
-                'BlockSize', [obj.r_T, obj.r_T], ...
-                'MaxIterations', obj.nIt, ...
-                'NumPyramidLevels', 3);
-%             tracker.setPoints(kp1.');
-            tracker.initialize(kp1.', image1);
+            tracker.setPoints(kp1.');
             [trKp,kpMask] = tracker(image2);
 %             release(tracker);
             trKp = trKp(kpMask,:).';

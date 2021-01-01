@@ -4,10 +4,9 @@ verboseDisp(obj.verbose, ...
 [R_CW, t_CW] = obj.state.getLastPose();
 prevPose = [R_CW, t_CW];
 
-[trackedKeypoints, trackedLandmarks, pose, frameIdx, trackedCandidates, prevFrameKeypoints, tracker] ...
+[trackedKeypoints, trackedLandmarks, pose, frameIdx, prevFrameKeypoints,trackedCandidates,tracker] ...
     = obj.initBlock.run(prevFrameIdx, prevPose);
 
-lostKeypoints = [];
 if ~isempty(pose)
     R_CW = pose(1:3,1:3);
     t_CW = pose(1:3,4);

@@ -10,10 +10,8 @@ classdef (Abstract) InitBlock < handle
         nKeypoints = 2000
         verbose = false
         RANSACIt = 2000
-        nSkip = 1
-        nIt = 3
         adaptive = 0.95
-        stopWithNPoints = 90
+        frameOffset = 2
         errorThreshold = 1
         maxDistance = 200
         candidateSuppressionRadius = 10
@@ -21,25 +19,27 @@ classdef (Abstract) InitBlock < handle
         samplingSize = [3,3]
         
         configurableProps = {'verbose', 'RANSACIt', 'adaptive', ...
-            'nSkip', 'nIt', 'errorThreshold', 'maxDistance', ...
-            'stopWithNPoints', 'nKeypoints', 'nLandmarksReference', ...
-            'candidateSuppressionRadius', 'samplingSize', 'candidatesSuppressionRadius'}
+            'errorThreshold', 'maxDistance', ...
+            'nKeypoints', 'nLandmarksReference', 'frameOffset', ...
+            'candidateSuppressionRadius', 'samplingSize'}
     end
     
     methods
-        function [kp,P_W,T_2W,frameIdx,kpc,prevKp,tracker] = run(obj, fromIndex, T_1W)
+        function [kp,P_W,T_2W,frameIdx,prevKp,kpc,tracker] = run(obj, fromIdx, T_1W)
         % TODO DOCUMENT
         arguments
           obj InitBlock
-          fromIndex uint32 = 1
+          fromIdx uint32 = 1
           T_1W {isTransformationMatrix} = eye(3,4)
         end
         if size(T_1W,1) == 3
             T_1W = [T_1W; 0 0 0 1];
         end
-        [kp,P_W,T_2W,frameIdx,prevKp,tracker] = obj.run_(fromIndex, T_1W);
-
-        kpc = [];
+        
+        frameIdx = fromIdx + obj.frameOffset;
+        
+        [kp,P_W,T_2W,prevKp,tracker] = obj.run_(fromIdx, frameIdx, T_1W);
+        
         if ~isempty(kp)
             % Candidate new keypoints
             error = max(0, obj.nLandmarksReference - size(kp, 2));
