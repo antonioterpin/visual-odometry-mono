@@ -15,14 +15,16 @@ end
         = obj.coBlock.localize(prevFrameIdx, frameIdx, kp, landmarks, candidates, tracker);
 
 % Keyframe selection
+it = frameIdx + obj.nSkip;
 while nnz(kpMask) / numel(kpMask) > obj.coBlock.keyframeConfidence ...
-        && ~isempty(R_CW) && ~isempty(t_CW)
+        && ~isempty(R_CW) && ~isempty(t_CW) ...
+        && it - prevFrameIdx <= obj.coBlock.keyframeMaxSkip
     verboseDisp(obj.verbose, ...
         'Considering frame %d as keyframe.\n', frameIdx);
     [R_CW_, t_CW_, trackedKeypoints_, kpMask_, ...
         trackedCandidates_, trackedCandidatesMask_, newKpc_] ...
             = obj.coBlock.localize(frameIdx, frameIdx+obj.nSkip, ...
-                trackedKeypoints, landmarks(:,kpMask), trackedCandidates);
+                trackedKeypoints, landmarks(:,kpMask), trackedCandidates, tracker);
             
     if nnz(kpMask_) / numel(kpMask_) > obj.coBlock.keyframeConfidence...
             && ~isempty(R_CW_) && ~isempty(t_CW_)
@@ -33,8 +35,9 @@ while nnz(kpMask) / numel(kpMask) > obj.coBlock.keyframeConfidence ...
         trackedCandidates = trackedCandidates_;
         trackedCandidatesMask(trackedCandidatesMask > 0) = trackedCandidatesMask_;
         newKpc = newKpc_;
-        frameIdx = frameIdx+obj.nSkip;
+        frameIdx = it;
     end
+    it = it + obj.nSkip;
 end
 
 verboseDisp(obj.verbose, ...
@@ -54,7 +57,11 @@ else
     if obj.continuouslyTriangulate
         [confirmedKp, confirmedLandmarks, trackedCandidates] ...
             = obj.state.evaluateCandidates(K, trackedCandidatesMask, trackedCandidates);
+        
+%         if size(trackedKeypoints, 2) + size(trackedCandidates, 2) ...
+%                 < 0.8 * obj.coBlock.nLandmarksReference
         obj.state.addCandidates(frameIdx, newKpc);
+%         end
         
         trackedKeypoints = [trackedKeypoints, confirmedKp];
         trackedLandmarks = [trackedLandmarks, confirmedLandmarks];

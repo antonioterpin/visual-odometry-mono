@@ -16,15 +16,14 @@ classdef PipelineState < handle
         
         lostBelow = 20
         verbose = true
-        cosTh = 0.1 % Threshold for triangulation
+        alphaTh = 2 % Threshold for triangulation
         maxDistance = 100
-        candidateWindow = 10
     end
     
     % Config params
     properties (Constant)
         configurableProps = {'lostBelow', 'verbose', ...
-            'cosTh', 'maxDistance', 'candidateWindow'}
+            'alphaTh', 'maxDistance'}
     end
     
     methods
@@ -289,8 +288,8 @@ classdef PipelineState < handle
                     [candidates; ones(1, N)], ...
                     [lastSeen; ones(1, N)], T_21, K, K, T_1W);
                 
-                error = reprojectionError(...
-                    P_W(1:3,:), lastSeen(1:2,:), K, T_2W(1:3,1:3), T_2W(1:3,4));
+%                 error = reprojectionError(...
+%                     P_W(1:3,:), lastSeen(1:2,:), K, T_2W(1:3,1:3), T_2W(1:3,4));
                 
                 C1 = -R_1W.'*t_1W;
                 C2 = -R_2W.'*t_2W;
@@ -299,20 +298,18 @@ classdef PipelineState < handle
                 bearings2 = normalize(P_W(1:3,:) - C2, 'norm');
                 
                 cosalpha = dot(bearings1, bearings2);
-                valid = cosalpha < state.cosTh;
-                min(cosalpha)
-                valid = error < 10;
+                valid = abs(rad2deg(acos(cosalpha))) > state.alphaTh;
                 
                 N = nnz(valid);
                 if N == 0
-                    verboseDisp(state.verbose, ...
-                        'Triangulated have still low confidence.\n', []);
+%                     verboseDisp(state.verbose, ...
+%                         'Triangulated have still low confidence.\n', []);
                     continue;
                 end
 
-                verboseDisp(state.verbose, ...
-                    '%d points can be triangulated with enough confidence at frame %d.\n', ...
-                    [N, fsFrameIdx]);
+%                 verboseDisp(state.verbose, ...
+%                     '%d points can be triangulated with enough confidence at frame %d.\n', ...
+%                     [N, fsFrameIdx]);
                 
                 stillCandidatesKp = candidates(:,~valid);
                 stillCandidatesLs = lastSeen(:,~valid);
@@ -364,8 +361,8 @@ classdef PipelineState < handle
                 end
                 
                 % Remove all candidates from frames too far away
-                state.Candidates(...
-                    state.Candidates.FirstId < lsFrameIdx - state.candidateWindow, :) = [];
+%                 state.Candidates(...
+%                     state.Candidates.FirstId < lsFrameIdx - state.candidateWindow, :) = [];
             end
             
             if state.verbose

@@ -146,7 +146,7 @@ classdef OutputBlock < handle
             axis ([minPosesX - 5, maxPosesX + 5, minPosesY - 5, maxPosesY + 5])
             title('Full Trajectory');
             
-            if obj.plotGroundTruth
+            if obj.plotGroundTruth && size(poses, 2) > 7
                 legend({'Ground truth', 'Estimate'}, 'Location', 'southoutside')
             end
         end

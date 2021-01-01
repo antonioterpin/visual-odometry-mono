@@ -65,7 +65,7 @@ if nnz(inliers) < minInliers
     verboseDisp(verbose, 'Unable to localize');
     R_CW = [];
     t_CW = [];
-    inliers = zeros(1, size(keypoints,2));
+    inliers = false(1, size(keypoints,2));
 else
 %     % To effectively estimate the pose, we use DLT
 %     M_CW = estimatePoseDLT(keypoints(:, inliers).', landmarks(:, inliers).', K);

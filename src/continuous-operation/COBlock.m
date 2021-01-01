@@ -16,10 +16,12 @@ classdef (Abstract) COBlock < handle
         nLandmarksReference = 200
         samplingSize = [3,3]
         keyframeConfidence = 0.8
+        keyframeMaxSkip = 5
         
         configurableProps = { 'p3pRANSACIt', 'p3pTolerance', ...
             'verbose', 'minInliers', 'adaptive', 'nLandmarksReference', ...
-            'candidateSuppressionRadius', 'samplingSize', 'keyframeConfidence'}
+            'candidateSuppressionRadius', 'samplingSize', ...
+            'keyframeConfidence', 'keyframeMaxSkip'}
     end
     
     methods
@@ -28,7 +30,7 @@ classdef (Abstract) COBlock < handle
             
             % 1. Keyframe selection & tracking
             nKp = size(kp, 2);
-            [trKpKpc, kpkpcMask] = obj.track(prevFrameIdx, frameIdx, [kp, kpc]);
+            [trKpKpc, kpkpcMask] = obj.track(prevFrameIdx, frameIdx, [kp, kpc], tracker);
             
             kpMask = kpkpcMask(1:nKp);
             kpcMask = kpkpcMask(nKp+1:end);

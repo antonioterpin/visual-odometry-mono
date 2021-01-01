@@ -23,7 +23,11 @@ classdef KLTInitBlock < InitBlock
         image1 = obj.inputBlock.getImage(fromIdx);
         kp1 = obj.detector.extractFeatures(image1, obj.nKeypoints);
 
-        tracker = vision.PointTracker('MaxBidirectionalError',obj.lambda);
+        tracker = vision.PointTracker(...
+            'MaxBidirectionalError',obj.lambda, ...
+            'BlockSize', [obj.r_T, obj.r_T], ...
+            'MaxIterations', obj.nItKLT, ...
+            'NumPyramidLevels', 3);
         initialize(tracker,kp1.',image1);
             
         errorTh = obj.errorThreshold^2;
@@ -77,8 +81,6 @@ classdef KLTInitBlock < InitBlock
         % triangulation of valid landmarks (already filtered)
         P_W = triangulateFromPose(...
             p1(:, inliers), p2(:, inliers), T_21, obj.K, obj.K, T_1W);
-        
-        release(tracker); % TODO can be optimized?
         
         end
     end
