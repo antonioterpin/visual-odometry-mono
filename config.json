@@ -11,34 +11,38 @@
                         "nIt": 3,
                         "nSkip": 1,
                         "adaptive": 0.95,
-                        "nKeypoints": [[25,25,25],[25,25,25],[25,25,25]], 
-                        "nLandmarksReference": 400, 
+                        "nKeypoints": [
+                            [100,100,100,100], 
+                            [100,100,100,100],
+                            [100,100,100,100]],
+                        "nLandmarksReference": 200, 
                         "samplingSize": [3,5],
-                        "candidateSuppressionRadius": 20,
+                        "candidateSuppressionRadius": 10,
                         "stopWithNPoints": 150,
-                        "errorThreshold": 10,
+                        "errorThreshold": 3,
                         "maxDistance": 200,
-                        "r_T": 15,
-                        "nItKLT": 75,
+                        "r_T": 21,
+                        "nItKLT": 50,
                         "lambda": 1,
-                        "keyframeConfidence": 0.7
+                        "keyframeConfidence": 0.8
                 }
         },
         "COBlock": {
                 "Handler": "KLT",
                 "Params": {
                         "p3pRANSACIt": 2000,
-                        "p3pTolerance": 10,
+                        "p3pTolerance": 3,
                         "adaptive": 0.99,
-                        "minInliers": 5,
+                        "minInliers": 10,
                         "verbose": true,
-                        "nLandmarksReference": 400, 
-                        "samplingSize": [3,5],
-                        "candidateSuppressionRadius": 20,
-                        "r_T": 15,
-                        "nIt": 75, 
-                        "lambda": 25, 
-                        "keyframeConfidence": 0.95
+                        "nLandmarksReference": 600, 
+                        "samplingSize": [5,5],
+                        "candidateSuppressionRadius": 10,
+                        "r_T": 21,
+                        "nIt": 50, 
+                        "lambda": 1, 
+                        "keyframeConfidence": 0.8,
+                        "keyframeMaxSkip": 3
                 }
         },
         "OptBlock": {
@@ -47,9 +51,9 @@
                         "verbose": true,
                         "plotMap": 3,
                         "plotSparsityPattern": 0,
-                        "isActive": false,
-                        "maxBundleSize": 150,
-                        "everyNIterations": 75,
+                        "isActive": true,
+                        "maxBundleSize": 50,
+                        "everyNIterations": 10,
                         "MaxIter": 20
                 }
         },
@@ -80,10 +84,9 @@
             "State": {
                 "lostBelow": 10,
                 "verbose": true,
-                "cosTh": 0.99,
-                "maxDistance": 100,
-                "candidateWindow": 3
+                "alphaTh": 1,
+                "maxDistance": 300
             },
-            "continuouslyTriangulate": true
+            "continuouslyTriangulate": false
         }
 }
