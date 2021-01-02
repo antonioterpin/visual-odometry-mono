@@ -483,6 +483,12 @@ classdef PipelineState < handle
             poseIdx = bundleIdx(2:2+nPoses-1);
             landmarksIdx = bundleIdx(2+nPoses:end);
             
+            % Ensure consistency of the full map even optimizing only part
+            % of the map
+            tau_1 = hiddenState(1:6);
+            T_WC = twist2HomogMatrix(tau_1);
+            delta = state.Poses.Position(poseIdx(1),:).' - T_WC(1:3,end);
+            
             for i = 1:nPoses
                 tau_i = hiddenState(6*(i-1)+1:6*i);
                 T_WC = twist2HomogMatrix(tau_i);
@@ -490,12 +496,14 @@ classdef PipelineState < handle
                 t_WC = T_WC(1:3,end);
                 t_CW = -R_CW * t_WC;
                 
-                state.Poses.R_CW(poseIdx(i), :) = reshape(R_CW, 1, []);
-                state.Poses.t_CW(poseIdx(i), :) = reshape(t_CW, 1, []);
-                state.Poses.Position(poseIdx(i), :) = reshape(t_WC, 1, []);
+                state.Poses.R_CW(poseIdx(i), :) = reshape(R_CW, 1, []); % TODO R might have to be modified
+                state.Poses.t_CW(poseIdx(i), :) = reshape(t_CW - R_CW*delta, 1, []);
+                state.Poses.Position(poseIdx(i), :) = reshape(t_WC + delta, 1, []);
             end
             
             landmarks = reshape(hiddenState(6*nPoses+1:end), 3, []);
+            landmarks = landmarks + repmat(delta, 1, size(landmarks,2));
+            
             [idx, ~] = find(state.Landmarks.Id == landmarksIdx.');
             state.Landmarks.Position(idx, :) = landmarks.';
         end

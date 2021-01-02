@@ -22,6 +22,16 @@ classdef BAOptimizationBlock < OptimizationBlock
             P_W = [P_W; ones(1, size(P_W, 2))];
 
             e = zeros(2, (numel(observations) - 2 - n) / 3);
+            
+            poses = zeros(3,n);
+            for i = 1 : n
+                T_Wi = twist2HomogMatrix(T(:,i));
+                poses(:,i) = T_Wi(1:3,end);
+            end
+            
+            poses(1,:) = smooth(poses(1,:), 10);
+            poses(2,:) = smooth(poses(2,:), 10);
+            poses(3,:) = smooth(poses(3,:), 10);
 
             j = 3;
             k = 1;
@@ -36,7 +46,8 @@ classdef BAOptimizationBlock < OptimizationBlock
                     P_i = T_Wi \ P_W(:, l_i);
                     repr_i = projectPoints(P_i(1:3,:), K);
 
-                    e(:,k:k+k_i-1) = p_i - repr_i;
+                    e(:,k:k+k_i-1) = (p_i - repr_i) * (1 +  ...
+                        + vecnorm(poses(:,i) - T_Wi(1:3,end),2));
                 end
                 
                 k = k + k_i;
