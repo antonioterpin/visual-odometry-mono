@@ -13,7 +13,7 @@ classdef PatchMatchingCOBlock < COBlock
         end
     end
     
-    methods (Access = protected)
+    methods %(Access = protected)
         function [trKp, kpMask] = track(obj, prevFrameIdx, frameIdx, kp1, ~)
             verboseDisp(obj.verbose, 'Patch matching to localize');
             
