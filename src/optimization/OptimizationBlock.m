@@ -9,11 +9,13 @@ classdef (Abstract) OptimizationBlock < handle
         MaxIter = 20
         isActive = true
         everyNIterations = 100
+        skipFirstNIterations = 20
         maxBundleSize = 150
         plotMap = 5
         plotSparsityPattern = 6
         configurableProps = {'verbose', 'MaxIter', 'isActive', ...
-            'everyNIterations', 'maxBundleSize', 'plotMap', 'plotSparsityPattern'}
+            'everyNIterations', 'maxBundleSize', 'skipFirstNIterations', ...
+            'plotMap', 'plotSparsityPattern'}
     end
     
     methods
@@ -23,6 +25,7 @@ classdef (Abstract) OptimizationBlock < handle
                 subplot(1,2,1);
                 OptimizationBlock.plotProblem(hiddenState, observations);
                 title('Problem before bundle adjustment');
+                pause(0.001);
             end
             
             e = @(hiddenState) obj.error(hiddenState, observations, obj.K);

@@ -55,14 +55,16 @@ function run(obj)
     
     K = obj.inputBlock.getIntrinsics();
     
-    prevFrameIdx = obj.startingFrame;
+    prevFrameIdx = obj.startingFrame; frameIdx = obj.startingFrame;
+    nProcessedFrames = 0;
     while prevFrameIdx < min(obj.inputBlock.getNumberOfImages(), obj.lastFrame)
+        prevFrameIdx = frameIdx;
         
         % If we are tracking to fre keypoints, we re-initialize
         if obj.state.isLost()
             initialization;
+            nProcessedFrames = nProcessedFrames + 1;
         else
-            prevFrameIdx = frameIdx;
             frameIdx = prevFrameIdx + obj.nSkip;
             continuousOperation;
         end
@@ -76,8 +78,9 @@ function run(obj)
             obj.outBlock.plot(frameIdx, trackedKeypoints, trackedCandidates, trackedLandmarks)
             
             % Eventually bundle adjust
-            if obj.optBlock.isActive ...
-                    && mod(frameIdx - obj.startingFrame, obj.optBlock.everyNIterations) == 0
+            if obj.optBlock.isActive && ...
+                nProcessedFrames > obj.optBlock.skipFirstNIterations && ...
+                mod(nProcessedFrames - obj.optBlock.skipFirstNIterations, obj.optBlock.everyNIterations) == 0
                 % Get optimization data structure
                 [hiddenState, observations, bundleIdx] ...
                     = obj.state.getOptimizationDS(obj.optBlock.maxBundleSize);
@@ -89,6 +92,7 @@ function run(obj)
                 obj.state.optimizedBundle(hiddenState, bundleIdx);
             end
             
+            nProcessedFrames = nProcessedFrames + 1;
             obj.state.prune();
         end
         

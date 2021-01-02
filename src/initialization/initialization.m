@@ -32,10 +32,10 @@ if ~isempty(pose)
         = obj.state.getOptimizationDS(obj.optBlock.maxBundleSize);
 
     % Start optimization
-    hiddenState = obj.optBlock.optimize(hiddenState, observations);
+%     hiddenState = obj.optBlock.optimize(hiddenState, observations);
 
     % Update state
-    obj.state.optimizedBundle(hiddenState, bundleIdx);
+%     obj.state.optimizedBundle(hiddenState, bundleIdx);
     
     if ~isempty(trackedCandidates) && obj.continuouslyTriangulate
         % Reset candidates (after init)
@@ -46,5 +46,5 @@ else
     localized = false;
     prevFrameIdx = obj.state.gotoPrevPose();
     assert(~isempty(prevFrameIdx), 'Hard reset needed.');
-    nFrameProcessed = nFrameProcessed - 1;
+    nProcessedFrames = nProcessedFrames - 2;
 end
