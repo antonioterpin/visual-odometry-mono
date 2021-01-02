@@ -88,6 +88,8 @@ function run(obj)
                 % Update state
                 obj.state.optimizedBundle(hiddenState, bundleIdx);
             end
+            
+            obj.state.prune();
         end
         
         pause(0.01); % Makes sure that plots refresh.  

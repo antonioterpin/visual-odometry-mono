@@ -19,12 +19,13 @@ classdef PipelineState < handle
         alphaTh = 2 % Threshold for triangulation
         maxDistance = 100
         minDistance = 6.5
+        pruneOlderThan = 100;
     end
     
     % Config params
     properties (Constant)
         configurableProps = {'lostBelow', 'verbose', ...
-            'alphaTh', 'maxDistance', 'minDistance'}
+            'alphaTh', 'maxDistance', 'minDistance', 'pruneOlderThan'}
     end
     
     methods
@@ -65,8 +66,7 @@ classdef PipelineState < handle
         end
         
         function resetToPose(state, poseIdx)
-            [nidx, ~, ~] = find(state.ObservationGraph.Nodes.PoseId > poseIdx ...
-                & ~isfinite(state.ObservationGraph.Nodes.LandmarkId));
+            [nidx, ~, ~] = find(state.ObservationGraph.Nodes.PoseId > poseIdx);
             
             state.ObservationGraph = rmnode(state.ObservationGraph, nidx);
             
@@ -76,6 +76,10 @@ classdef PipelineState < handle
         function addLandmarksToPose(state, poseIdx, landmarksIdx, keypoints)
             % Take node id
             pose_nid = find(state.ObservationGraph.Nodes.PoseId == poseIdx);
+            if isempty(pose_nid)
+                verboseDisp(state.verbose, 'Pose not in the observation graph anymore.\n', []);
+                return;
+            end
             landmarks_nids = find(max(state.ObservationGraph.Nodes.LandmarkId == landmarksIdx.', [], 2));
             % Add edges between pose and landmarks
             nLandmarks = length(landmarksIdx);
@@ -103,7 +107,7 @@ classdef PipelineState < handle
             % 
             % See also addLandmarks.
             
-            newPose = table(poseIdx, Inf, 'VariableNames', {'PoseId', 'LandmarkId'});
+            newPose = table(poseIdx, 0, 'VariableNames', {'PoseId', 'LandmarkId'});
             
             % Add pose node in observation graph
             state.ObservationGraph = addnode(state.ObservationGraph, newPose);
@@ -141,10 +145,27 @@ classdef PipelineState < handle
             state.Landmarks(end+1:end+nLandmarks,:) ...
                 = table(landmarksIdx, landmarks.');
             
-            newLandmarks = table(Inf(nLandmarks, 1), landmarksIdx,...
+            newLandmarks = table(zeros(nLandmarks, 1), landmarksIdx,...
                 'VariableNames', {'PoseId', 'LandmarkId'});
             % TODO inf does not work properly on the first column..
             state.ObservationGraph = addnode(state.ObservationGraph, newLandmarks);
+        end
+        
+        function prune(state)
+            % Prune older
+            [toRemove, ~] = find(...
+                state.ObservationGraph.Nodes{:,1} < state.Poses.Id(end) - state.pruneOlderThan...
+                & state.ObservationGraph.Nodes{:,1} > 0);
+            if nnz(toRemove) > 0
+                state.ObservationGraph = rmnode(state.ObservationGraph, toRemove);
+                deg = degree(state.ObservationGraph);
+                [toRemove, ~] = find(deg == 0);
+                if nnz(toRemove) > 0
+                    [idx, ~] = find(state.Landmarks.Id == state.ObservationGraph.Nodes{toRemove,2}.');
+                    state.Landmarks(idx,:) = [];
+                    state.ObservationGraph = rmnode(state.ObservationGraph, toRemove);
+                end
+            end
         end
         
         function [landmarks, landmarksIdx, keypoints] = getObservations(state, poseId)
@@ -157,7 +178,8 @@ classdef PipelineState < handle
             poseNode = find(state.ObservationGraph.Nodes.PoseId == poseId);
             [eid, landmarksNodesIdx] = outedges(state.ObservationGraph, poseNode);
             landmarksIdx = state.ObservationGraph.Nodes.LandmarkId(landmarksNodesIdx);
-            landmarks = state.Landmarks.Position(landmarksIdx, :).';
+            [idx, ~] = find(state.Landmarks.Id == landmarksIdx.');
+            landmarks = state.Landmarks.Position(idx, :).';
             keypoints = state.ObservationGraph.Edges.Keypoints(eid, :).';
         end
 
@@ -293,7 +315,7 @@ classdef PipelineState < handle
 %                     P_W(1:3,:), lastSeen(1:2,:), K, T_2W(1:3,1:3), T_2W(1:3,4));
                 
                 C1 = -R_1W.'*t_1W;
-                C2 = -R_2W.'*t_2W;
+                C2 = -R_2W.'*t_2W*3;
                 
                 bearings1 = normalize(P_W(1:3,:) - C1, 'norm');
                 bearings2 = normalize(P_W(1:3,:) - C2, 'norm');
@@ -446,7 +468,8 @@ classdef PipelineState < handle
                 j = j+3*k_i+1;
             end
             
-            landmarks = state.Landmarks.Position(landmarksIdx, :).';
+            [idx, ~] = find(state.Landmarks.Id == landmarksIdx.'); 
+            landmarks = state.Landmarks.Position(idx, :).';
             
             hiddenState = [hiddenState; reshape(landmarks, [], 1)];
             observations = [bundleSize; size(landmarks, 2); observations];
@@ -473,7 +496,8 @@ classdef PipelineState < handle
             end
             
             landmarks = reshape(hiddenState(6*nPoses+1:end), 3, []);
-            state.Landmarks.Position(landmarksIdx, :) = landmarks.';
+            [idx, ~] = find(state.Landmarks.Id == landmarksIdx.');
+            state.Landmarks.Position(idx, :) = landmarks.';
         end
     end
 end
