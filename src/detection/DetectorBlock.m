@@ -134,7 +134,7 @@ classdef (Abstract) DetectorBlock < handle
             mask = mask(suppressionRadius+1:end-suppressionRadius,...
                 suppressionRadius+1:end-suppressionRadius);
             
-            if obj.plotMask
+            if obj.plotMask > 0
                 figure(obj.plotMask);
                 spy(mask);
             end

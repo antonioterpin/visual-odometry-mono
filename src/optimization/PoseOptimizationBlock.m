@@ -1,19 +1,8 @@
-classdef BAOptimizationBlock < OptimizationBlock
+classdef PoseOptimizationBlock < OptimizationBlock
     %BAOPTIMIZATIONBLOCK Summary of this class goes here
     %   Detailed explanation goes here
     
-    properties
-        Algorithm = 'levenberg-marquardt'
-        OptimalityTolerance = 10^-4
-        UseParallel = false
-    end
-    
     methods
-        function obj = BAOptimizationBlock()
-            obj.configurableProps = [obj.configurableProps{:}, ...
-                {'Algorithm', 'OptimalityTolerance', 'UseParallel'}];
-        end
-        
         function e = error(~, hiddenState, observations, K)
             n = observations(1);
     
@@ -28,7 +17,7 @@ classdef BAOptimizationBlock < OptimizationBlock
                 T_Wi = twist2HomogMatrix(T(:,i));
                 poses(:,i) = T_Wi(1:3,end);
             end
-            
+
             poses(1,:) = smooth(poses(1,:), 10);
             poses(2,:) = smooth(poses(2,:), 10);
             poses(3,:) = smooth(poses(3,:), 10);
@@ -76,9 +65,9 @@ classdef BAOptimizationBlock < OptimizationBlock
 
                 J(e_i : e_i+2*k_i-1, 6*(i-1)+1:6*i) = 1;
 
-                for m = 1:numel(l_i)
-                    J(e_i+(m-1)*2:e_i+m*2-1, 1+n*6+(l_i(m)-1)*3:n*6+l_i(m)*3) = 1;
-                end
+%                 for m = 1:numel(l_i)
+%                     J(e_i+(m-1)*2:e_i+m*2-1, 1+n*6+(l_i(m)-1)*3:n*6+l_i(m)*3) = 1;
+%                 end
 
                 e_i = e_i + 2*k_i;
             end

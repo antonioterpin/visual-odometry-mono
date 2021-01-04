@@ -47,7 +47,7 @@
                 }
         },
         "OptBlock": {
-                "Handler": "BA",
+                "Handler": "Pose",
                 "Params": {
                         "verbose": true,
                         "plotMap": 3,
@@ -55,7 +55,9 @@
                         "isActive": false,
                         "maxBundleSize": 50,
                         "everyNIterations": 35,
-                        "MaxIter": 40
+                        "MaxIter": 40,
+                        "smooth": 1000,
+                        "skipFirstNIterations":0
                 }
         },
         "OutputBlock": {

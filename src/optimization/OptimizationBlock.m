@@ -13,9 +13,10 @@ classdef (Abstract) OptimizationBlock < handle
         maxBundleSize = 150
         plotMap = 5
         plotSparsityPattern = 6
+        smooth = 10^3
         configurableProps = {'verbose', 'MaxIter', 'isActive', ...
             'everyNIterations', 'maxBundleSize', 'skipFirstNIterations', ...
-            'plotMap', 'plotSparsityPattern'}
+            'plotMap', 'plotSparsityPattern', 'smooth'}
     end
     
     methods
