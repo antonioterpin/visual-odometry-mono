@@ -1,0 +1,95 @@
+{
+        "InputBlock": {
+                "Handler": "Parking",
+                "Path": "data/parking"
+        },
+        "InitBlock": {
+                "Handler": "KLT",
+                "Params" : {
+                        "RANSACIt": 2000,
+                        "verbose": true,
+                        "nIt": 3,
+                        "nSkip": 1,
+                        "adaptive": 0.99,
+                        "nKeypoints": [
+                            [75,75,75,75], 
+                            [75,75,75,75],
+                            [75,75,75,75]],
+                        "nLandmarksReference": 600, 
+                        "samplingSize": [3,7],
+                        "candidateSuppressionRadius": 10,
+                        "stopWithNPoints": 150,
+                        "errorThreshold": 3,
+                        "maxDistance": 200,
+                        "r_T": 31,
+                        "nItKLT": 60,
+                        "nLevels":2,
+                        "lambda": 2
+                }
+        },
+        "COBlock": {
+                "Handler": "KLT",
+                "Params": {
+                        "p3pRANSACIt": 2000,
+                        "p3pTolerance": 1.7,
+                        "adaptive": 0.99,
+                        "minInliers": 10,
+                        "verbose": true,
+                        "nLandmarksReference": 600, 
+                        "samplingSize": [5,5],
+                        "candidateSuppressionRadius": 4,
+                        "r_T": 31,
+                        "nIt": 60, 
+                        "lambda": 2, 
+                        "nLevels":2,
+                        "keyframeConfidence": 0.9,
+                        "keyframeMaxSkip": 1
+                }
+        },
+        "OptBlock": {
+                "Handler": "BA",
+                "Params": {
+                        "verbose": true,
+                        "plotMap": 3,
+                        "plotSparsityPattern": 0,
+                        "isActive": false,
+                        "maxBundleSize": 50,
+                        "everyNIterations": 35,
+                        "MaxIter": 40
+                }
+        },
+        "OutputBlock": {
+                "plotGroundTruth": false,
+                "recentTrajectorySize": 30,
+                "smooth": false,
+                "color1": "g",
+                "color2": "r"
+        },
+        "DetectorBlock": {
+                "Handler": "Harris",
+                "Params": {
+                        "patchSize": 23,
+                        "kappa": 0.08,
+                        "nonMaximaSuppressionRadius": 13,
+                        "descriptorRadius": 23,
+                        "lambda": 3,
+                        "plotKeypoints": 0,
+                        "plotMask": 0
+                }
+        },
+        "Pipeline": {
+            "verbose": true,
+            "nSkip": 1,
+            "startingFrame": 1,
+            "lastFrame": 599,
+            "State": {
+                "lostBelow": 10,
+                "verbose": true,
+                "alphaTh": 0.5,
+                "minDistance": 2.5,
+                "maxDistance": 100,
+                "pruneOlderThan": 100
+            },
+            "continuouslyTriangulate": true
+        }
+}

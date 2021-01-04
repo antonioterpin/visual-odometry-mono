@@ -1,4 +1,4 @@
-% function p_GC = alignEstimateToGroundTruth(pp_GC, p_VC)
+ function p_GC = alignEstimateToGroundTruth(pp_GC, p_VC)
 % % TODO DOCUMENTATION!
 
 N = size(p_VC, 2);
