@@ -14,7 +14,7 @@ classdef BAOptimizationBlock < OptimizationBlock
                 {'Algorithm', 'OptimalityTolerance', 'UseParallel'}];
         end
         
-        function e = error(~, hiddenState, observations, K)
+        function e = error(obj, hiddenState, observations, K)
             n = observations(1);
     
             T = reshape(hiddenState(1:6*n), 6, []); % twist vectors

@@ -2,7 +2,7 @@ classdef PoseOptimizationBlock < OptimizationBlock
     %BAOPTIMIZATIONBLOCK Summary of this class goes here
     %   Detailed explanation goes here
     methods
-        function e = error(~, hiddenState, observations, K)
+        function e = error(obj, hiddenState, observations, K)
             n = observations(1);
     
             T = reshape(hiddenState(1:6*n), 6, []); % twist vectors
