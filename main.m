@@ -7,7 +7,7 @@ addpath(genpath('src')); % Source code
 %% Configuration & pipeline blocks loading
 % Change the following line to load a different configuration.
 % Alternatively, you can specify each block in the configuration object.
-configFile = 'config/kitti/config.json';
+configFile = 'config/malaga/config.json';
 configuration = Config.loadFromFile(configFile); 
 pipeline = MonoVOPipeline(configuration);
 

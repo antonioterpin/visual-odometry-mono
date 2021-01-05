@@ -52,9 +52,9 @@
                         "verbose": true,
                         "plotMap": 3,
                         "plotSparsityPattern": 0,
-                        "isActive": false,
-                        "maxBundleSize": 50,
-                        "everyNIterations": 35,
+                        "isActive": true,
+                        "maxBundleSize": 30,
+                        "everyNIterations": 20,
                         "MaxIter": 40,
                         "smooth": 1000,
                         "skipFirstNIterations":0

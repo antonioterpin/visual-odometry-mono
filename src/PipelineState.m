@@ -315,13 +315,29 @@ classdef PipelineState < handle
 %                     P_W(1:3,:), lastSeen(1:2,:), K, T_2W(1:3,1:3), T_2W(1:3,4));
                 
                 C1 = -R_1W.'*t_1W;
-                C2 = -R_2W.'*t_2W*3;
+                C2 = -R_2W.'*t_2W;
+                C2old = C2;
+                C2 = C2*3;
                 
                 bearings1 = normalize(P_W(1:3,:) - C1, 'norm');
                 bearings2 = normalize(P_W(1:3,:) - C2, 'norm');
                 
                 cosalpha = dot(bearings1, bearings2);
                 valid = abs(rad2deg(acos(cosalpha))) > state.alphaTh;
+                
+                %RECENTLY ADDED METRIC: remove the XX% farthest and closest
+                %landmarks
+%                 %FARTHEST and CLOSEST
+%                 topLan = floor(0.85 * size(P_W, 2));   %consider XX% of landmarks TOP
+%                 bottomLan = ceil(0.05 * size(P_W, 2)); %consider XX% of landmarks BOTTOM
+%                 distances = sqrt((abs(P_W(1, :)-C2old(1))).^2 +...
+%                     (abs(P_W(3, :)-C2old(3))).^2);
+%                 [~, idxSort] = sort(distances, 'ascend');
+%                 idxSort = idxSort(bottomLan:topLan);
+%                 validPercentage = zeros(size(valid));
+%                 validPercentage(idxSort) = 1;
+%                 valid = valid .* validPercentage;
+%                 valid = valid > 0;
                 
                 N = nnz(valid);
                 if N == 0

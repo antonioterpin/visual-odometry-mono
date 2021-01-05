@@ -1,7 +1,6 @@
 classdef PoseOptimizationBlock < OptimizationBlock
     %BAOPTIMIZATIONBLOCK Summary of this class goes here
     %   Detailed explanation goes here
-    
     methods
         function e = error(~, hiddenState, observations, K)
             n = observations(1);

@@ -15,14 +15,14 @@
                             [75,75,75,75], 
                             [75,75,75,75],
                             [75,75,75,75]],
-                        "nLandmarksReference": 900, 
-                        "samplingSize": [1,7],
+                        "nLandmarksReference": 600, 
+                        "samplingSize": [1,5],
                         "candidateSuppressionRadius": 8,
                         "stopWithNPoints": 150,
                         "errorThreshold": 3,
                         "maxDistance": 200,
                         "r_T": 41,
-                        "nItKLT": 30,
+                        "nItKLT": 40,
                         "nLevels":3,
                         "lambda": 1
                 }
@@ -31,15 +31,15 @@
                 "Handler": "KLT",
                 "Params": {
                         "p3pRANSACIt": 2000,
-                        "p3pTolerance": 3.5,
+                        "p3pTolerance": 2,
                         "adaptive": 0.99,
                         "minInliers": 10,
                         "verbose": true,
-                        "nLandmarksReference": 900, 
-                        "samplingSize": [1,7],
-                        "candidateSuppressionRadius": 7,
+                        "nLandmarksReference": 600, 
+                        "samplingSize": [1,5],
+                        "candidateSuppressionRadius": 5,
                         "r_T": 31,
-                        "nIt": 30, 
+                        "nIt": 40, 
                         "lambda": 1, 
                         "nLevels":3,
                         "keyframeConfidence": 0.9,
@@ -80,15 +80,14 @@
         "Pipeline": {
             "verbose": true,
             "nSkip": 1,
-            "startingFrame": 1,
+            "startingFrame": 560,
             "lastFrame": 2121,
             "State": {
                 "lostBelow": 10,
                 "verbose": true,
                 "alphaTh": 1,
-                "minDistance": 1,
-                "maxDistance": 60,
-                "pruneOlderThan": 60
+                "minDistance": 3,
+                "maxDistance": 200
             },
             "continuouslyTriangulate": true
         }
