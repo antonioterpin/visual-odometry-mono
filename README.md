@@ -13,7 +13,8 @@
 <a name="intro"></a>
 ## Introduction
 This project is the assembly of all of the concepts learnt during the (Vision Algorithms for Mobile Robotics)[http://rpg.ifi.uzh.ch/teaching.html] class at ETH Zürich. In particular, the building blocks developed during the exercise sessions have been improved and assembled to build a monocular visual odometry pipeline, with very satisfying results.
-![Optimal estimate KITTI]()
+
+![Optimal estimate KITTI](https://github.com/antonioterpin/visual-odometry-mono/blob/develop/images/cover.jpg)
 
 
 <a name="getstarted"><a/>
