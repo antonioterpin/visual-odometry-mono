@@ -15,14 +15,14 @@
                             [75,75,75,75], 
                             [75,75,75,75],
                             [75,75,75,75]],
-                        "nLandmarksReference": 600, 
+                        "nLandmarksReference": 200, 
                         "samplingSize": [1,5],
-                        "candidateSuppressionRadius": 8,
+                        "candidateSuppressionRadius": 10,
                         "stopWithNPoints": 150,
                         "errorThreshold": 3,
                         "maxDistance": 200,
-                        "r_T": 41,
-                        "nItKLT": 40,
+                        "r_T": 31,
+                        "nItKLT": 30,
                         "nLevels":3,
                         "lambda": 1
                 }
@@ -31,17 +31,13 @@
                 "Handler": "KLT",
                 "Params": {
                         "p3pRANSACIt": 2000,
-                        "p3pTolerance": 2,
+                        "p3pTolerance": 6,
                         "adaptive": 0.99,
                         "minInliers": 10,
                         "verbose": true,
-                        "nLandmarksReference": 600, 
+                        "nLandmarksReference": 800, 
                         "samplingSize": [1,5],
-                        "candidateSuppressionRadius": 5,
-                        "r_T": 31,
-                        "nIt": 40, 
-                        "lambda": 1, 
-                        "nLevels":3,
+                        "candidateSuppressionRadius": 7,
                         "keyframeConfidence": 0.9,
                         "keyframeMaxSkip": 3
                 }
@@ -52,10 +48,10 @@
                         "verbose": true,
                         "plotMap": 3,
                         "plotSparsityPattern": 0,
-                        "isActive": false,
-                        "maxBundleSize": 50,
-                        "everyNIterations": 50,
-                        "MaxIter": 30
+                        "isActive": true,
+                        "maxBundleSize": 220,
+                        "everyNIterations": 100,
+                        "MaxIter": 40
                 }
         },
         "OutputBlock": {
@@ -70,7 +66,7 @@
                 "Params": {
                         "patchSize": 11,
                         "kappa": 0.08,
-                        "nonMaximaSuppressionRadius": 11,
+                        "nonMaximaSuppressionRadius": 15,
                         "descriptorRadius": 11,
                         "lambda": 3,
                         "plotKeypoints": 0,
@@ -79,15 +75,17 @@
         },
         "Pipeline": {
             "verbose": true,
-            "nSkip": 1,
-            "startingFrame": 560,
-            "lastFrame": 2121,
+            "nSkip": 2,
+            "startingFrame": 1,
+            "lastFrame": 4541,
             "State": {
                 "lostBelow": 10,
                 "verbose": true,
-                "alphaTh": 1,
-                "minDistance": 3,
-                "maxDistance": 200
+                "alphaTh": 5,
+                "minDistance": 7,
+                "maxDistance": 60,
+                "pruneOlderThan": 800
+
             },
             "continuouslyTriangulate": true
         }

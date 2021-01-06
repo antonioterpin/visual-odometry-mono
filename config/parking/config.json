@@ -15,7 +15,7 @@
                             [75,75,75,75], 
                             [75,75,75,75],
                             [75,75,75,75]],
-                        "nLandmarksReference": 600, 
+                        "nLandmarksReference": 800, 
                         "samplingSize": [3,7],
                         "candidateSuppressionRadius": 10,
                         "stopWithNPoints": 150,
@@ -24,24 +24,20 @@
                         "r_T": 31,
                         "nItKLT": 60,
                         "nLevels":2,
-                        "lambda": 2
+                        "lambda": 2.5
                 }
         },
         "COBlock": {
                 "Handler": "KLT",
                 "Params": {
                         "p3pRANSACIt": 2000,
-                        "p3pTolerance": 1.7,
+                        "p3pTolerance": 2.2,
                         "adaptive": 0.99,
                         "minInliers": 10,
                         "verbose": true,
-                        "nLandmarksReference": 600, 
+                        "nLandmarksReference": 900, 
                         "samplingSize": [5,5],
                         "candidateSuppressionRadius": 4,
-                        "r_T": 31,
-                        "nIt": 60, 
-                        "lambda": 2, 
-                        "nLevels":2,
                         "keyframeConfidence": 0.9,
                         "keyframeMaxSkip": 1
                 }
@@ -52,9 +48,9 @@
                         "verbose": true,
                         "plotMap": 3,
                         "plotSparsityPattern": 0,
-                        "isActive": false,
-                        "maxBundleSize": 50,
-                        "everyNIterations": 35,
+                        "isActive": true,
+                        "maxBundleSize": 100,
+                        "everyNIterations": 30,
                         "MaxIter": 40
                 }
         },
