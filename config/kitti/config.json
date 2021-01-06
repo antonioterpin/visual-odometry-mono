@@ -36,10 +36,6 @@
                         "nLandmarksReference": 800, 
                         "samplingSize": [3,5],
                         "candidateSuppressionRadius": 5,
-                        "r_T": 31,
-                        "nIt": 30, 
-                        "lambda": 2.5, 
-                        "nLevels":3,
                         "keyframeConfidence": 0.9,
                         "keyframeMaxSkip": 3
                 }

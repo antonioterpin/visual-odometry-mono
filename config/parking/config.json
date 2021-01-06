@@ -8,8 +8,7 @@
                 "Params" : {
                         "RANSACIt": 2000,
                         "verbose": true,
-                        "nIt": 3,
-                        "nSkip": 1,
+                        "frameOffset": 2,
                         "adaptive": 0.99,
                         "nKeypoints": [
                             [75,75,75,75], 
@@ -18,7 +17,6 @@
                         "nLandmarksReference": 800, 
                         "samplingSize": [3,7],
                         "candidateSuppressionRadius": 10,
-                        "stopWithNPoints": 150,
                         "errorThreshold": 3,
                         "maxDistance": 200,
                         "r_T": 31,
