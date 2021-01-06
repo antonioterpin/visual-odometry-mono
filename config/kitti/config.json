@@ -8,8 +8,7 @@
                 "Params" : {
                         "RANSACIt": 2000,
                         "verbose": true,
-                        "nIt": 3,
-                        "nSkip": 1,
+                        "frameOffset": 2,
                         "adaptive": 0.95,
                         "nKeypoints": [
                             [75,75,75,75], 
@@ -18,7 +17,6 @@
                         "nLandmarksReference": 200, 
                         "samplingSize": [3,5],
                         "candidateSuppressionRadius": 10,
-                        "stopWithNPoints": 150,
                         "errorThreshold": 3,
                         "maxDistance": 200,
                         "r_T": 41,
@@ -38,25 +36,21 @@
                         "nLandmarksReference": 800, 
                         "samplingSize": [3,5],
                         "candidateSuppressionRadius": 5,
-                        "r_T": 31,
-                        "nIt": 30, 
-                        "lambda": 2.5, 
-                        "nLevels":3,
                         "keyframeConfidence": 0.9,
                         "keyframeMaxSkip": 3
                 }
         },
         "OptBlock": {
-                "Handler": "Pose",
+                "Handler": "BA",
                 "Params": {
                         "verbose": true,
                         "plotMap": 3,
                         "plotSparsityPattern": 0,
                         "isActive": true,
-                        "maxBundleSize": 30,
-                        "everyNIterations": 20,
+                        "maxBundleSize": 150,
+                        "everyNIterations": 30,
                         "MaxIter": 40,
-                        "smooth": 1000,
+                        "smooth": 0,
                         "skipFirstNIterations":0
                 }
         },
@@ -88,9 +82,9 @@
                 "lostBelow": 10,
                 "verbose": true,
                 "alphaTh": 5,
-                "minDistance": 5,
-                "maxDistance": 60,
-                "pruneOlderThan": 200
+                "minDistance": 3,
+                "maxDistance": 40,
+                "pruneOlderThan": 300
             },
             "continuouslyTriangulate": true
         }
