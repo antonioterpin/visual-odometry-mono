@@ -74,7 +74,9 @@ classdef BAOptimizationBlock < OptimizationBlock
                 l_i = observations(j+2*k_i+1:j+3*k_i);
                 j = j + 3*k_i + 1;
 
-                J(e_i : e_i+2*k_i-1, 6*(i-1)+1:6*i) = 1;
+                if i > 2
+                    J(e_i : e_i+2*k_i-1, 6*(i-1)+1:6*i) = 1;
+                end
 
                 for m = 1:numel(l_i)
                     J(e_i+(m-1)*2:e_i+m*2-1, 1+n*6+(l_i(m)-1)*3:n*6+l_i(m)*3) = 1;

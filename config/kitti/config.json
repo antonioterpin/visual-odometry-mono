@@ -8,8 +8,7 @@
                 "Params" : {
                         "RANSACIt": 2000,
                         "verbose": true,
-                        "nIt": 3,
-                        "nSkip": 1,
+                        "frameOffset": 2,
                         "adaptive": 0.95,
                         "nKeypoints": [
                             [75,75,75,75], 
@@ -18,7 +17,6 @@
                         "nLandmarksReference": 200, 
                         "samplingSize": [3,5],
                         "candidateSuppressionRadius": 10,
-                        "stopWithNPoints": 150,
                         "errorThreshold": 3,
                         "maxDistance": 200,
                         "r_T": 41,
@@ -47,7 +45,7 @@
                 }
         },
         "OptBlock": {
-                "Handler": "Pose",
+                "Handler": "BA",
                 "Params": {
                         "verbose": true,
                         "plotMap": 3,
