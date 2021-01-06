@@ -8,8 +8,7 @@
                 "Params" : {
                         "RANSACIt": 2000,
                         "verbose": true,
-                        "nIt": 3,
-                        "nSkip": 1,
+                        "frameOffset": 2,
                         "adaptive": 0.95,
                         "nKeypoints": [
                             [75,75,75,75], 
@@ -18,7 +17,6 @@
                         "nLandmarksReference": 600, 
                         "samplingSize": [1,5],
                         "candidateSuppressionRadius": 8,
-                        "stopWithNPoints": 150,
                         "errorThreshold": 3,
                         "maxDistance": 200,
                         "r_T": 41,
@@ -38,10 +36,6 @@
                         "nLandmarksReference": 600, 
                         "samplingSize": [1,5],
                         "candidateSuppressionRadius": 5,
-                        "r_T": 31,
-                        "nIt": 40, 
-                        "lambda": 1, 
-                        "nLevels":3,
                         "keyframeConfidence": 0.9,
                         "keyframeMaxSkip": 3
                 }
@@ -55,7 +49,9 @@
                         "isActive": false,
                         "maxBundleSize": 50,
                         "everyNIterations": 50,
-                        "MaxIter": 30
+                        "MaxIter": 30,
+                        "smooth": 0,
+                        "skipFirstNIterations": 0
                 }
         },
         "OutputBlock": {
@@ -87,7 +83,8 @@
                 "verbose": true,
                 "alphaTh": 1,
                 "minDistance": 3,
-                "maxDistance": 200
+                "maxDistance": 200,
+                "pruneOlderThan": 300
             },
             "continuouslyTriangulate": true
         }
