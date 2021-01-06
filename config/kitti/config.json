@@ -51,10 +51,10 @@
                         "plotMap": 3,
                         "plotSparsityPattern": 0,
                         "isActive": true,
-                        "maxBundleSize": 30,
-                        "everyNIterations": 20,
+                        "maxBundleSize": 150,
+                        "everyNIterations": 30,
                         "MaxIter": 40,
-                        "smooth": 1000,
+                        "smooth": 0,
                         "skipFirstNIterations":0
                 }
         },
@@ -86,9 +86,9 @@
                 "lostBelow": 10,
                 "verbose": true,
                 "alphaTh": 5,
-                "minDistance": 5,
-                "maxDistance": 60,
-                "pruneOlderThan": 200
+                "minDistance": 3,
+                "maxDistance": 40,
+                "pruneOlderThan": 300
             },
             "continuouslyTriangulate": true
         }
