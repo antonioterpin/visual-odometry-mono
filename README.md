@@ -1,10 +1,22 @@
 # Visual odometry monocular pipeline
 
+##### Table of Contents
+1. [Introduction](#intro)
+2. [Getting started](#getstarted)
+3. [Features](#features)
+4. [Performances](#performances)
+5. [References](#references)
+6. [Contributing](#contribute)
+7. [License](#license)
+8. [Acknowledgments](#acknowledgments)
+
+<a name="intro"></a>
 ## Introduction
 This project is the assembly of all of the concepts learnt during the (Vision Algorithms for Mobile Robotics)[http://rpg.ifi.uzh.ch/teaching.html] class at ETH Zürich. In particular, the building blocks developed during the exercise sessions have been improved and assembled to build a monocular visual odometry pipeline, with very satisfying results.
 ![Optimal estimate KITTI]()
 
 
+<a name="getstarted"><a/>
 ## Getting started
 ### Prerequisites
 The code run and has been tested with MATLAB R2020b. The following licenses are required:
@@ -19,7 +31,6 @@ The code run and has been tested with MATLAB R2020b. The following licenses are 
 The above set of toolbox has been determined with the `license('inuse')` command at the end of the simulation. The code was developed having access at all the toolboxes.
 
 ### Installing
-
 1. Clone the repo. In the following it is supposed the repository has been cloned in `/users/aterpin/visual-odometry-mono`.
 2. Download the dataset (at least one). You can find the tested one in the Dataset subsection of the Performance section.
 ..a. Remark: If you want to use your own dataset, you can extend the `InputBlock` class.
@@ -41,6 +52,7 @@ The above set of toolbox has been determined with the `license('inuse')` command
 ### Running the simulation
 Just run `main.m`.
 
+<a name="features"><a/>
 ## Features
 A wiki and thorough documentation for this project is currently under development. You can refer to the [project report]() to have an detailed overview of the pipeline.
 
@@ -51,6 +63,7 @@ The pipeline implements the following additional features:
 * a  continuously  integrated  bundle  adjustment  is  implemented and running on the pipeline; and
 * the pipeline is a flexible platform that allows further experiments and improvements, in which is easy to integrate other blocks
 
+<a name="performances"><a/>
 ## Performances
 ### Dataset
 The pipeline has been tested with the following datasets. For each you can find a link to the official webpage (if any), a quick download link (KITTI and Malaga are quite heavy!) and a video to a recorded performance. Enjoy the run 🏎
@@ -68,6 +81,7 @@ The results obtained are summarized in the following graphs.
 ![Yaw error]()
 ![Translation error]()
 
+<a name="references"><a/>
 ## References
 <a id="1">[1]</a> L. Kneip, D. Scaramuzza, and R. Siegwart. A novel parametrization ofthe perspective-three-point problem for a direct computation of absolutecamera position and orientation.  In CVPR 2011, pages 2969–2976, June 2011.
 
@@ -87,16 +101,19 @@ The results obtained are summarized in the following graphs.
 
 <a id="9">[9]</a> Zichao Zhang and Davide Scaramuzza. A tutorial on quantitativetrajectory evaluation for visual(-inertial) odometry. In IEEE/RSJ Int. Conf. Intell. Robot. Syst. (IROS), 2018.
 
+<a name="contribute"><a/>
 ## Contributing
 At the moment it is not possible to contribute to the project, since it has to be submitted as our original work. Afterwards we will make it possible in a easy way. Save your coffees until then ☕️.
 
-## Contributors
-### Authors
+### Contributors
+#### Authors
 + [Antonio Terpin](mailto:aterpin@ethz.ch) - MSc Robotics, Systems and Control ETHz (Zürich), BSc Electronic Engineering École normale di Udine (Italy)
 + [Antonio Arbues](mailto:aarbues@ethz.ch) - MSc Robotics, Systems and Control ETHz (Zürich), BSc Mechanical Engineering Politecnico di Milano (Italy)
 
+<a name="license"><a/>
 ## License
 This project is licensed under the MIT License - see the [LICENSE](https://github.com/antonioterpin/visual-odometry-mono/blob/main/LICENSE) file for details.
 
+<a name="acknowledgments"><a/>
 ## Acknowledgments
 This project has been initially developed within the Vision Algorithms for Mobile Robotics 2020 class at ETHz, by [Antonio Terpin](mailto:aterpin@ethz.ch) and [Antonio Arbues](mailto:aarbues@ethz.ch). A full list of the contributors can be found at the [contributors]() section. The authors wants to thank Daniel Gehrig (Robot Perception Group) for the insightful hints and comments during the development of this project.
