@@ -68,19 +68,23 @@ The pipeline implements the following additional features:
 ## Performances
 ### Dataset
 The pipeline has been tested with the following datasets. For each you can find a link to the official webpage (if any), a quick download link (KITTI and Malaga are quite heavy!) and a video to a recorded performance. Enjoy the run 🏎
-| Dataset       | Webpage | Download  | Youtube  |
+| Dataset | Webpage | Download | Video |
 |:----- |:-----|:-----|:-----|
-| KITTI | [KITTI webpage](http://www.cvlibs.net/datasets/kitti/eval_odometry.php) | [kitti00.zip](http://rpg.ifi.uzh.ch/docs/teaching/2016/kitti00.zip)| TODO! |
-| Malaga | [Malaga webpage](https://www.mrpt.org/MalagaUrbanDataset) | [malaga07.zip](http://rpg.ifi.uzh.ch/docs/teaching/2016/malaga-urban-dataset-extract-07.zip)| TODO! |
-| Parking | | [parking.zip](http://rpg.ifi.uzh.ch/docs/teaching/2016/parking.zip) | TODO! |
+| KITTI | [KITTI webpage](http://www.cvlibs.net/datasets/kitti/eval_odometry.php) | [kitti00.zip](http://rpg.ifi.uzh.ch/docs/teaching/2016/kitti00.zip)| [Youtube video](https://www.youtube.com/watch?v=wylit5A9JqQ) |
+| Malaga | [Malaga webpage](https://www.mrpt.org/MalagaUrbanDataset) | [malaga07.zip](http://rpg.ifi.uzh.ch/docs/teaching/2016/malaga-urban-dataset-extract-07.zip)| [Youtube video](https://www.youtube.com/watch?v=2y6KvV_5wEw) |
+| Parking | | [parking.zip](http://rpg.ifi.uzh.ch/docs/teaching/2016/parking.zip) | [Youtube video](https://www.youtube.com/watch?v=-XjXqDtPnvQ) |
 ### Quantitative evaluation
-The estimated trajectory for the KITTI dataset (the most challenging one) has been quantitatively compared to the ground truth using the open source evaluation framework provided by the [Robot Perception Group](https://github.com/uzh-rpg/rpg_trajectory_evaluation).
-The results obtained are summarized in the following graphs.
+The estimated trajectory for the KITTI dataset (the most challenging one, and the one mostly tuned) has been quantitatively compared to the ground truth using the open source evaluation framework provided by the [Robot Perception Group](https://github.com/uzh-rpg/rpg_trajectory_evaluation).
+  
+<img src="https://github.com/antonioterpin/visual-odometry-mono/blob/main/images/trajectory_side_sim3_-1.png" width="30%"></img>
 
-![Estimate and groundtruth]()
-![Scale drift]()
-![Yaw error]()
-![Translation error]()
+Rotation error | Relative yaw error
+:-------------------------:|:-------------------------:
+![Rotation error](https://github.com/antonioterpin/visual-odometry-mono/blob/main/images/rotation_error_sim3_-1.png)|![Relative yaw error](https://github.com/antonioterpin/visual-odometry-mono/blob/main/images/rel_yaw_error.png)
+Translation error | Scale error
+![Translation error](https://github.com/antonioterpin/visual-odometry-mono/blob/main/images/translation_error_sim3_-1.png) | ![Scale drift](https://github.com/antonioterpin/visual-odometry-mono/blob/main/images/scale_error_sim3_-1.png)
+Relative translation error | Relative translation error (%)
+![Relative translation error](https://github.com/antonioterpin/visual-odometry-mono/blob/main/images/rel_translation_error.png) | ![Relative translation error percentage](https://github.com/antonioterpin/visual-odometry-mono/blob/main/images/rel_translation_error_perc.png)
 
 <a name="references"><a/>
 ## References
@@ -106,6 +110,7 @@ The results obtained are summarized in the following graphs.
 ## Contributing
 At the moment it is not possible to contribute to the project, since it has to be submitted as our original work. Afterwards we will make it possible in a easy way. Save your coffees until then ☕️.
 
+<a name="contributors"><a/>
 ### Contributors
 #### Authors
 + [Antonio Terpin](mailto:aterpin@ethz.ch) - MSc Robotics, Systems and Control ETHz (Zürich), BSc Electronic Engineering École normale di Udine (Italy)
@@ -117,4 +122,4 @@ This project is licensed under the MIT License - see the [LICENSE](https://githu
 
 <a name="acknowledgments"><a/>
 ## Acknowledgments
-This project has been initially developed within the Vision Algorithms for Mobile Robotics 2020 class at ETHz, by [Antonio Terpin](mailto:aterpin@ethz.ch) and [Antonio Arbues](mailto:aarbues@ethz.ch). A full list of the contributors can be found at the [contributors]() section. The authors wants to thank Daniel Gehrig (Robot Perception Group) for the insightful hints and comments during the development of this project.
+This project has been initially developed within the Vision Algorithms for Mobile Robotics 2020 class at ETHz, by [Antonio Terpin](mailto:aterpin@ethz.ch) and [Antonio Arbues](mailto:aarbues@ethz.ch). A full list of the contributors can be found at the [contributors](#contributors) section. The authors wants to thank Daniel Gehrig (Robot Perception Group) for the insightful hints and comments during the development of this project.
