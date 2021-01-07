@@ -55,7 +55,7 @@ Just run `main.m`.
 
 <a name="features"><a/>
 ## Features
-A wiki and thorough documentation for this project is currently under development. You can refer to the [project report]() to have an detailed overview of the pipeline.
+A wiki and thorough documentation for this project is currently under development. You can refer to the [project report](https://github.com/antonioterpin/visual-odometry-mono/blob/main/report.pdf) to have an detailed overview of the pipeline.
 
 The pipeline implements the following additional features:
 * the pipeline achieves a good global trajectory estimate;
