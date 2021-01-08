@@ -73,6 +73,15 @@ The pipeline has been tested with the following datasets. For each you can find 
 | KITTI | [KITTI webpage](http://www.cvlibs.net/datasets/kitti/eval_odometry.php) | [kitti00.zip](http://rpg.ifi.uzh.ch/docs/teaching/2016/kitti00.zip)| [Youtube video](https://www.youtube.com/watch?v=wylit5A9JqQ) |
 | Malaga | [Malaga webpage](https://www.mrpt.org/MalagaUrbanDataset) | [malaga07.zip](http://rpg.ifi.uzh.ch/docs/teaching/2016/malaga-urban-dataset-extract-07.zip)| [Youtube video](https://www.youtube.com/watch?v=2y6KvV_5wEw) |
 | Parking | | [parking.zip](http://rpg.ifi.uzh.ch/docs/teaching/2016/parking.zip) | [Youtube video](https://www.youtube.com/watch?v=-XjXqDtPnvQ) |
+  
+The videos are recorded with the following hardware specifications:
+| | Acer Aspire E 15 |
+|:----- |:-----|
+| CPU | 2,7 GHz Intel Core i7-7500U |
+| RAM | 12 GB DDR4 |
+| OS | Ubuntu 18.04 |
+| # threads | 1 |
+
 ### Quantitative evaluation
 The estimated trajectory for the KITTI dataset (the most challenging one, and the one mostly tuned) has been quantitatively compared to the ground truth using the open source evaluation framework provided by the [Robot Perception Group](https://github.com/uzh-rpg/rpg_trajectory_evaluation).
   
