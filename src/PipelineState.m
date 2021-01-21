@@ -316,8 +316,8 @@ classdef PipelineState < handle
                 
                 C1 = -R_1W.'*t_1W;
                 C2 = -R_2W.'*t_2W;
-                C2old = C2;
-                C2 = C2*3;
+%                 C2 = C2*3;
+                C2 = C1 + (C2 - C1) * 3;
                 
                 bearings1 = normalize(P_W(1:3,:) - C1, 'norm');
                 bearings2 = normalize(P_W(1:3,:) - C2, 'norm');
